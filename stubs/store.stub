@@ -1,0 +1,242 @@
+import { defineStore } from 'pinia';
+import apiClient from '@/Services/apiClient';
+import { getErrorMessage } from '@/Helpers/error';
+import type { ApiResponse } from '@/Types/api';
+import type {
+    [MODEL_NAME],
+    [MODEL_NAME]Filters,
+    [MODEL_NAME]Pagination,
+    Create[MODEL_NAME]Dto,
+    Update[MODEL_NAME]Dto,
+} from '@/Types/[MODULE_NAME]/[model_name]';
+import {
+    mapTo[MODEL_NAME],
+    mapTo[MODEL_NAME]Pagination,
+    mapTo[MODEL_NAME]FiltersApi,
+    mapCreate[MODEL_NAME]ToApi,
+    mapUpdate[MODEL_NAME]ToApi,
+} from '@/Utils/Mappers/[model_name]';
+
+// FILE: resources/js/Stores/[MODULE_NAME]/[model_name]Store.ts
+
+// Normalize data safely
+const normalize[MODEL_NAME]s = (value: unknown): [MODEL_NAME][] => (
+    Array.isArray(value) ? value : []
+);
+
+// Default pagination
+const DEFAULT_PAGINATION: [MODEL_NAME]Pagination = {
+    currentPage: 1,
+    perPage: 15,
+    total: 0,
+    lastPage: 1,
+};
+
+// Default filters
+const DEFAULT_FILTERS: [MODEL_NAME]Filters = {
+    search: '',
+    perPage: 15,
+};
+
+export const use[MODEL_NAME]sStore = defineStore('[feature_name]s', {
+    state: () => ({
+        [feature_plural]: [] as [MODEL_NAME][],
+        selected[MODEL_NAME]: null as [MODEL_NAME] | null,
+        loading: false,
+        loadingList: false,
+        loadingDetail: false,
+        error: null as string | null,
+        filters: { ...DEFAULT_FILTERS } as [MODEL_NAME]Filters,
+        pagination: {
+            data: [] as [MODEL_NAME][],
+            meta: { ...DEFAULT_PAGINATION },
+        },
+    }),
+
+    actions: {
+        setFilters(filters: Partial<[MODEL_NAME]Filters>): void {
+            this.filters = { ...this.filters, ...filters };
+        },
+
+        resetFilters(): void {
+            this.filters = { ...DEFAULT_FILTERS };
+        },
+
+        async fetchAll(page: number = 1, forceRefresh: boolean = false): Promise<void> {
+            if (!forceRefresh && this.[feature_plural].length > 0 && page === this.pagination.meta.currentPage) {
+                return;
+            }
+
+            this.loadingList = true;
+            this.error = null;
+            try {
+                const { data } = await apiClient.v1.get('/[api_route]/[feature_plural]', {
+                    params: {
+                        ...mapTo[MODEL_NAME]FiltersApi(this.filters),
+                        page,
+                        per_page: this.filters.perPage,
+                    },
+                });
+
+                const payload = data?.data ?? {};
+                const items = Array.isArray(payload.items)
+                    ? payload.items
+                    : Array.isArray(payload.data)
+                        ? payload.data
+                        : [];
+                const pagination = payload.pagination ?? payload.meta ?? {};
+
+                this.[feature_plural] = normalize[MODEL_NAME]s(items).map(mapTo[MODEL_NAME]);
+                this.pagination.meta = {
+                    ...mapTo[MODEL_NAME]Pagination(pagination),
+                    currentPage: page,
+                };
+                this.pagination.data = this.[feature_plural];
+            } catch (err: unknown) {
+                this.error = getErrorMessage(err, 'Failed to fetch [feature_plural]');
+                throw err;
+            } finally {
+                this.loadingList = false;
+            }
+        },
+
+        async fetchById(id: number): Promise<void> {
+            this.loadingDetail = true;
+            this.error = null;
+            try {
+                const { data } = await apiClient.v1.get(`/[api_route]/[feature_plural]/${id}`);
+                this.selected[MODEL_NAME] = data.data
+                    ? mapTo[MODEL_NAME](data.data)
+                    : null;
+            } catch (err: unknown) {
+                this.error = getErrorMessage(err, 'Failed to fetch [feature_name]');
+                throw err;
+            } finally {
+                this.loadingDetail = false;
+            }
+        },
+
+        async create(payload: Create[MODEL_NAME]Dto): Promise<ApiResponse<[MODEL_NAME]>> {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await apiClient.v1.post(
+                    '/[api_route]/[feature_plural]',
+                    mapCreate[MODEL_NAME]ToApi(payload)
+                );
+                const response = data as ApiResponse<Record<string, any>>;
+
+                if (Number(response.status) === 1 && response.data) {
+                    this.add[MODEL_NAME](mapTo[MODEL_NAME](response.data));
+                }
+
+                return {
+                    ...response,
+                    data: response.data ? mapTo[MODEL_NAME](response.data) : null,
+                };
+            } catch (err: unknown) {
+                this.error = getErrorMessage(err, 'Failed to create [feature_name]');
+                throw err;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async update(id: number, payload: Update[MODEL_NAME]Dto): Promise<ApiResponse<[MODEL_NAME]>> {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await apiClient.v1.put(
+                    `/[api_route]/[feature_plural]/${id}`,
+                    mapUpdate[MODEL_NAME]ToApi(payload)
+                );
+                const response = data as ApiResponse<Record<string, any>>;
+
+                if (Number(response.status) === 1 && response.data) {
+                    this.update[MODEL_NAME](id, mapTo[MODEL_NAME](response.data));
+                }
+
+                return {
+                    ...response,
+                    data: response.data ? mapTo[MODEL_NAME](response.data) : null,
+                };
+            } catch (err: unknown) {
+                this.error = getErrorMessage(err, 'Failed to update [feature_name]');
+                throw err;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async delete(id: number): Promise<ApiResponse<void>> {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await apiClient.v1.delete(`/[api_route]/[feature_plural]/${id}`);
+                const response = data as ApiResponse<void>;
+
+                if (Number(response.status) === 1) {
+                    this.remove[MODEL_NAME](id);
+                }
+
+                return response;
+            } catch (err: unknown) {
+                this.error = getErrorMessage(err, 'Failed to delete [feature_name]');
+                throw err;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        add[MODEL_NAME](item: [MODEL_NAME]): void {
+            this.[feature_plural] = normalize[MODEL_NAME]s(this.[feature_plural]);
+            this.[feature_plural].unshift(item);
+            this.pagination.data = this.[feature_plural];
+            this.pagination.meta.total++;
+        },
+
+        update[MODEL_NAME](id: number, data: Partial<[MODEL_NAME]>): void {
+            this.[feature_plural] = normalize[MODEL_NAME]s(this.[feature_plural]);
+            const index = this.[feature_plural].findIndex((i) => i.id === id);
+            if (index !== -1) {
+                this.[feature_plural][index] = { ...this.[feature_plural][index], ...data };
+            }
+
+            if (this.selected[MODEL_NAME]?.id === id) {
+                this.selected[MODEL_NAME] = { ...this.selected[MODEL_NAME], ...data };
+            }
+
+            this.pagination.data = this.[feature_plural];
+        },
+
+        remove[MODEL_NAME](id: number): void {
+            this.[feature_plural] = normalize[MODEL_NAME]s(this.[feature_plural]);
+            const index = this.[feature_plural].findIndex((i) => i.id === id);
+            if (index !== -1) {
+                this.[feature_plural].splice(index, 1);
+                this.pagination.meta.total = Math.max(0, this.pagination.meta.total - 1);
+            }
+            this.pagination.data = this.[feature_plural];
+        },
+
+        clearError(): void {
+            this.error = null;
+        },
+
+        $reset(): void {
+            this.$patch({
+                [feature_plural]: [],
+                selected[MODEL_NAME]: null,
+                loading: false,
+                loadingList: false,
+                loadingDetail: false,
+                error: null,
+                filters: { ...DEFAULT_FILTERS },
+                pagination: {
+                    data: [],
+                    meta: { ...DEFAULT_PAGINATION },
+                },
+            });
+        },
+    },
+});

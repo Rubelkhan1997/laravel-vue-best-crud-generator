@@ -1,0 +1,241 @@
+<template>
+    <div class="p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">[FEATURE_NAME] Management</h1>
+                <p class="text-sm text-gray-600 mt-1">Manage all [feature_plural]</p>
+            </div>
+            <Link
+                :href="'[web_route]/create'"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+                <i class="fas fa-plus mr-2"></i>Add New [MODEL_NAME]
+            </Link>
+        </div>
+
+        <!-- Search & Filters -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex gap-4">
+                <div class="flex-1">
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        placeholder="Search [feature_plural]..."
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        @keyup.enter="handleSearch"
+                    />
+                </div>
+                <button
+                    @click="handleSearch"
+                    :disabled="loading"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                    <i class="fas fa-search mr-2"></i>Search
+                </button>
+                <button
+                    @click="handleReset"
+                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                    <i class="fas fa-redo mr-2"></i>Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="loading && [feature_plural].length === 0" class="bg-white rounded-lg shadow p-8 text-center">
+            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+            <p class="text-gray-600">Loading [feature_plural]...</p>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p class="text-red-800">{{ error }}</p>
+        </div>
+
+        <!-- Data Table -->
+        <div v-else class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            ID
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created At
+                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr v-for="item in [feature_plural]" :key="item.id" class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ item.id }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ item.name || 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ formatDate(item.createdAt) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Link
+                                :href="`[web_route]/${item.id}`"
+                                class="text-blue-600 hover:text-blue-900 mr-4"
+                            >
+                                <i class="fas fa-eye"></i>
+                            </Link>
+                            <Link
+                                :href="`[web_route]/${item.id}/edit`"
+                                class="text-green-600 hover:text-green-900 mr-4"
+                            >
+                                <i class="fas fa-edit"></i>
+                            </Link>
+                            <button
+                                @click="handleDelete(item.id)"
+                                class="text-red-600 hover:text-red-900"
+                            >
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div v-if="[feature_plural].length === 0" class="p-8 text-center">
+                <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                <p class="text-gray-600">No [feature_plural] found</p>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="pagination.total > 0" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <button
+                        @click="handlePageChange(pagination.currentPage - 1)"
+                        :disabled="pagination.currentPage === 1"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                        Previous
+                    </button>
+                    <button
+                        @click="handlePageChange(pagination.currentPage + 1)"
+                        :disabled="pagination.currentPage === pagination.lastPage"
+                        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                        Next
+                    </button>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing <span class="font-medium">{{ (pagination.currentPage - 1) * pagination.perPage + 1 }}</span> to
+                            <span class="font-medium">{{ Math.min(pagination.currentPage * pagination.perPage, pagination.total) }}</span> of
+                            <span class="font-medium">{{ pagination.total }}</span> results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <button
+                                v-for="page in visiblePages"
+                                :key="page"
+                                @click="handlePageChange(page)"
+                                :class="[
+                                    page === pagination.currentPage
+                                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
+                                    'relative inline-flex items-center px-4 py-2 border text-sm font-medium'
+                                ]"
+                            >
+                                {{ page }}
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
+import { use[MODEL_NAME]s } from '@/Composables/[MODULE_NAME]/use[MODEL_NAME]s';
+
+// FILE: resources/js/Pages/[MODULE_NAME]/[FEATURE_NAME]/Index.vue
+
+const searchQuery = ref('');
+const {
+    [feature_plural],
+    pagination,
+    loading,
+    error,
+    fetchAll,
+    delete[MODEL_NAME],
+    setFilters,
+    resetFilters,
+} = use[MODEL_NAME]s();
+
+const visiblePages = computed(() => {
+    const pages: number[] = [];
+    const total = pagination.value.lastPage;
+    const current = pagination.value.currentPage;
+    const delta = 2;
+
+    for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
+        pages.push(i);
+    }
+
+    return pages;
+});
+
+function handleSearch(): void {
+    setFilters({ search: searchQuery.value });
+    fetchAll(1, true);
+}
+
+function handleReset(): void {
+    searchQuery.value = '';
+    resetFilters();
+    fetchAll(1, true);
+}
+
+function handlePageChange(page: number): void {
+    if (page >= 1 && page <= pagination.value.lastPage) {
+        fetchAll(page, false);
+    }
+}
+
+async function handleDelete(id: number): Promise<void> {
+    if (!confirm('Are you sure you want to delete this [feature_name]?')) {
+        return;
+    }
+
+    try {
+        await delete[MODEL_NAME](id);
+        const targetPage = [feature_plural].value.length === 1 && pagination.value.currentPage > 1
+            ? pagination.value.currentPage - 1
+            : pagination.value.currentPage;
+        await fetchAll(targetPage, true);
+    } catch (error) {
+        console.error('Failed to delete [feature_name]:', error);
+    }
+}
+
+function formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
+}
+
+onMounted(() => {
+    fetchAll(1, false);
+});
+</script>

@@ -1,0 +1,140 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Modules\[MODULE]\Models\[MODEL];
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+// FILE: tests/Feature/[MODEL]Test.php
+
+class [MODEL]Test extends TestCase
+{
+    use RefreshDatabase;
+
+    /** @test */
+    public function it_can_list_[feature_plural]()
+    {
+        [MODEL]::factory()->count(5)->create();
+
+        $response = $this->getJson('/[api_route]/[feature_plural]');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 1,
+                'message' => '[MODEL]s fetched successfully',
+            ])
+            ->assertJsonStructure([
+                'status',
+                'data' => [
+                    'items' => [],
+                    'pagination' => [
+                        'current_page',
+                        'per_page',
+                        'total',
+                        'last_page',
+                    ],
+                ],
+                'message',
+            ]);
+    }
+
+    /** @test */
+    public function it_can_create_[model_name]()
+    {
+        $data = [
+[FIELDS]
+        ];
+
+        $response = $this->postJson('/[api_route]/[feature_plural]', $data);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'status' => 1,
+                'message' => '[MODEL] created successfully',
+            ]);
+
+        $this->assertDatabaseHas('[TABLE]', [
+[FIELDS_DB]
+        ]);
+    }
+
+    /** @test */
+    public function it_can_show_[model_name]()
+    {
+        $[model_name] = [MODEL]::factory()->create();
+
+        $response = $this->getJson("/[api_route]/[feature_plural]/{$[model_name]->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 1,
+                'data' => [
+                    'id' => $[model_name]->id,
+                ],
+            ]);
+    }
+
+    /** @test */
+    public function it_can_update_[model_name]()
+    {
+        $[model_name] = [MODEL]::factory()->create();
+
+        $data = [
+[FIELDS_UPDATE]
+        ];
+
+        $response = $this->putJson("/[api_route]/[feature_plural]/{$[model_name]->id}", $data);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 1,
+                'message' => '[MODEL] updated successfully',
+            ]);
+
+        $this->assertDatabaseHas('[TABLE]', [
+[FIELDS_DB_UPDATE]
+        ]);
+    }
+
+    /** @test */
+    public function it_can_delete_[model_name]()
+    {
+        $[model_name] = [MODEL]::factory()->create();
+
+        $response = $this->deleteJson("/[api_route]/[feature_plural]/{$[model_name]->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 1,
+                'message' => '[MODEL] deleted successfully',
+            ]);
+
+        $this->assertSoftDeleted('[TABLE]', [
+            'id' => $[model_name]->id,
+        ]);
+    }
+
+    /** @test */
+    public function it_returns_404_for_non_existent_[model_name]()
+    {
+        $response = $this->getJson('/[api_route]/[feature_plural]/999');
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'status' => 0,
+                'message' => '[MODEL] not found',
+            ]);
+    }
+
+    /** @test */
+    public function it_validates_required_fields_on_create()
+    {
+        $response = $this->postJson('/[api_route]/[feature_plural]', []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors([
+[VALIDATION_ERRORS]
+            ]);
+    }
+}

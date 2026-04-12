@@ -1,0 +1,159 @@
+<template>
+    <div class="p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Edit [MODEL_NAME]</h1>
+                <p class="text-sm text-gray-600 mt-1">Update [feature_name] information</p>
+            </div>
+            <Link
+                :href="'[web_route]'"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+                <i class="fas fa-arrow-left mr-2"></i>Back to List
+            </Link>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="loading" class="bg-white rounded-lg shadow p-8 text-center">
+            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+            <p class="text-gray-600">Loading [feature_name] details...</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div v-else-if="form.hasErrors()" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <ul class="list-disc list-inside text-red-800">
+                <li v-for="(error, index) in form.errors" :key="index">{{ error }}</li>
+            </ul>
+        </div>
+
+        <!-- Form -->
+        <div v-else class="bg-white rounded-lg shadow p-6">
+            <form @submit.prevent="submit" class="space-y-6">
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Name <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        v-model="form.name"
+                        type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        :class="{ 'border-red-500': form.errors.name }"
+                        placeholder="Enter name"
+                    />
+                    <p v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{ form.errors.name }}</p>
+                </div>
+
+                <!-- Code -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Code <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        v-model="form.code"
+                        type="text"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        :class="{ 'border-red-500': form.errors.code }"
+                        placeholder="Enter code"
+                    />
+                    <p v-if="form.errors.code" class="text-red-500 text-sm mt-1">{{ form.errors.code }}</p>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Email
+                    </label>
+                    <input
+                        v-model="form.email"
+                        type="email"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        :class="{ 'border-red-500': form.errors.email }"
+                        placeholder="Enter email"
+                    />
+                    <p v-if="form.errors.email" class="text-red-500 text-sm mt-1">{{ form.errors.email }}</p>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end gap-4 pt-4">
+                    <Link
+                        :href="'[web_route]'"
+                        class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                        Cancel
+                    </Link>
+                    <button
+                        type="submit"
+                        :disabled="form.processing"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                        <i v-if="form.processing" class="fas fa-spinner fa-spin mr-2"></i>
+                        {{ form.processing ? 'Updating...' : 'Update [MODEL_NAME]' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { onMounted } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
+import { use[MODEL_NAME]s } from '@/Composables/[MODULE_NAME]/use[MODEL_NAME]s';
+
+// FILE: resources/js/Pages/[MODULE_NAME]/[FEATURE_NAME]/Edit.vue
+
+interface Props {
+    [model_name]: {
+        data: {
+            id: number;
+            name: string;
+            code: string;
+            email?: string | null;
+        };
+    };
+}
+
+const props = defineProps<Props>();
+
+const { update, loading } = use[MODEL_NAME]s();
+
+const form = useForm({
+    name: '',
+    code: '',
+    email: '',
+});
+
+onMounted(() => {
+    if (props.[model_name]?.data) {
+        form.name = props.[model_name].data.name;
+        form.code = props.[model_name].data.code;
+        form.email = props.[model_name].data.email || '';
+    }
+});
+
+async function submit(): Promise<void> {
+    try {
+        const id = props.[model_name].data.id;
+        const result = await update(id, {
+            name: form.name,
+            code: form.code,
+            email: form.email || undefined,
+        });
+
+        if (Number(result.status) === 1) {
+            router.visit('/[web_route]');
+        }
+    } catch (err: unknown) {
+        const apiErr = err as Record<string, any>;
+        if (apiErr?.response?.data?.errors) {
+            const backendErrors: Record<string, string[]> = apiErr.response.data.errors;
+            Object.entries(backendErrors).forEach(([key, messages]) => {
+                form.setError(key as keyof typeof form.errors, messages[0]);
+            });
+        }
+    }
+}
+</script>

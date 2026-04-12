@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Modules\[MODULE]\Controllers\Web;
+
+use App\Http\Controllers\Controller;
+use App\Modules\[MODULE]\Services\[MODEL]Service;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+use Throwable;
+
+// FILE: app/Modules/[MODULE]/Controllers/Web/[MODEL]Controller.php
+
+class [MODEL]Controller extends Controller
+{
+    public function __construct(
+        private readonly [MODEL]Service $service
+    ) {}
+
+    public function index(): Response
+    {
+        return Inertia::render('[MODULE]/[FEATURE_NAME]/Index');
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('[MODULE]/[FEATURE_NAME]/Create');
+    }
+
+    public function show(int $id): Response
+    {
+        try {
+            $model = $this->service->show($id);
+            return Inertia::render('[MODULE]/[FEATURE_NAME]/Show', [
+                '[model_name]' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($model),
+            ]);
+        } catch (Throwable $e) {
+            logger()->error('Error loading [model_name]: ' . $e->getMessage());
+            abort(404, '[MODEL] not found');
+        }
+    }
+
+    public function edit(int $id): Response
+    {
+        try {
+            $model = $this->service->show($id);
+            return Inertia::render('[MODULE]/[FEATURE_NAME]/Edit', [
+                '[model_name]' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($model),
+            ]);
+        } catch (Throwable $e) {
+            logger()->error('Error loading [model_name]: ' . $e->getMessage());
+            abort(404, '[MODEL] not found');
+        }
+    }
+}

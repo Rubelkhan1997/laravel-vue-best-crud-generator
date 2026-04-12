@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Modules\[MODULE]\Services;
+
+use App\Modules\[MODULE]\Models\[MODEL];
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+
+// FILE: app/Modules/[MODULE]/Services/[SERVICE].php
+
+class [SERVICE]
+{
+    /**
+     * Get paginated list with filters
+     */
+    public function index(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        return [MODEL]::query()
+            ->search($filters['search'] ?? null)
+            ->status($filters['status'] ?? null)
+            ->dateRange($filters['from_date'] ?? null, $filters['to_date'] ?? null)
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /**
+     * Get single record by ID
+     */
+    public function show(int $id): [MODEL]
+    {
+        return [MODEL]::findOrFail($id);
+    }
+
+    /**
+     * Create new record
+     */
+    public function store(array $data): [MODEL]
+    {
+        return DB::transaction(function () use ($data) {
+            return [MODEL]::create($data);
+        });
+    }
+
+    /**
+     * Update existing record
+     */
+    public function update([MODEL] $model, array $data): [MODEL]
+    {
+        return DB::transaction(function () use ($model, $data) {
+            $model->update($data);
+            return $model->fresh();
+        });
+    }
+
+    /**
+     * Delete record
+     */
+    public function destroy([MODEL] $model): bool
+    {
+        return DB::transaction(function () use ($model) {
+            return $model->delete();
+        });
+    }
+
+    /**
+     * Get options for dropdowns
+     */
+    public function getOptions(): array
+    {
+        return [MODEL]::pluck('name', 'id')->toArray();
+    }
+}

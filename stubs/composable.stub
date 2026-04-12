@@ -1,0 +1,177 @@
+import { computed, onMounted, onUnmounted, inject } from 'vue';
+import { use[MODEL_NAME]sStore } from '@/Stores/[MODULE_NAME]/[model_name]Store';
+import { useLoading, usePolling } from '@/Composables';
+import { getApiError } from '@/Helpers/error';
+import type { ApiResponse } from '@/Types/api';
+import { get } from 'lodash';
+import type { toast as ToastType } from '@/Plugins/toast';
+import type {
+    [MODEL_NAME],
+    [MODEL_NAME]Filters,
+    Create[MODEL_NAME]Dto,
+    Update[MODEL_NAME]Dto,
+} from '@/Types/[MODULE_NAME]/[model_name]';
+
+// FILE: resources/js/Composables/[MODULE_NAME]/use[MODEL_NAME]s.ts
+
+export interface Use[MODEL_NAME]sOptions {
+    autoFetch?: boolean;
+    initialFilters?: Partial<[MODEL_NAME]Filters>;
+    pollingInterval?: number;
+}
+
+export function use[MODEL_NAME]s(options: Use[MODEL_NAME]sOptions = {}) {
+    const {
+        autoFetch = false,
+        initialFilters = {},
+        pollingInterval = 0,
+    } = options;
+
+    const store = use[MODEL_NAME]sStore();
+    const toast = inject('toast') as typeof ToastType;
+
+    const { loading: _loading, start: startLoading, stop: stopLoading } = useLoading();
+    const { loading: _saving, start: startSaving, stop: stopSaving } = useLoading();
+
+    const { start: startPolling, stop: stopPolling } = usePolling(
+        () => fetchAll(),
+        pollingInterval,
+        () => pollingInterval > 0
+    );
+
+    const [feature_plural] = computed(() => store.[feature_plural]);
+    const [model_name] = computed(() => store.selected[MODEL_NAME]);
+    const loading = computed(() => _loading.value || store.loadingList || store.loadingDetail);
+    const saving = computed(() => _saving.value || store.loading);
+    const error = computed(() => store.error);
+    const pagination = computed(() => store.pagination.meta);
+
+    async function fetchAll(page = 1, forceRefresh = false, params?: Partial<[MODEL_NAME]Filters>): Promise<void> {
+        startLoading();
+        if (params) {
+            store.setFilters(params);
+        }
+
+        try {
+            await store.fetchAll(page, forceRefresh);
+        } catch (err: unknown) {
+            toast.error(getApiError(err, 'Failed to fetch [feature_plural]'));
+            throw err;
+        } finally {
+            stopLoading();
+        }
+    }
+
+    async function fetchById(id: number): Promise<void> {
+        startLoading();
+        try {
+            await store.fetchById(id);
+        } catch (err: unknown) {
+            toast.error(getApiError(err, 'Failed to fetch [feature_name]'));
+            throw err;
+        } finally {
+            stopLoading();
+        }
+    }
+
+    async function create(payload: Create[MODEL_NAME]Dto): Promise<ApiResponse<[MODEL_NAME]>> {
+        startSaving();
+        try {
+            const result = await store.create(payload);
+            const isSuccess = Number(result.status) === 1;
+
+            if (isSuccess) {
+                toast.success(result.message || '[MODEL_NAME] created successfully');
+            } else {
+                toast.error(result.message || 'Failed to create [feature_name]');
+            }
+
+            return result;
+        } catch (err: unknown) {
+            toast.error(getApiError(err, 'Failed to create [feature_name]'));
+            throw err;
+        } finally {
+            stopSaving();
+        }
+    }
+
+    async function update(id: number, payload: Update[MODEL_NAME]Dto): Promise<ApiResponse<[MODEL_NAME]>> {
+        startSaving();
+        try {
+            const result = await store.update(id, payload);
+            const isSuccess = Number(result.status) === 1;
+
+            if (isSuccess) {
+                toast.success(result.message || '[MODEL_NAME] updated successfully');
+            } else {
+                toast.error(result.message || 'Failed to update [feature_name]');
+            }
+
+            return result;
+        } catch (err: unknown) {
+            toast.error(getApiError(err, 'Failed to update [feature_name]'));
+            throw err;
+        } finally {
+            stopSaving();
+        }
+    }
+
+    async function delete[MODEL_NAME](id: number): Promise<ApiResponse<void>> {
+        startSaving();
+        try {
+            const result = await store.delete(id);
+            const isSuccess = Number(result.status) === 1;
+
+            if (isSuccess) {
+                toast.success(result.message || '[MODEL_NAME] deleted successfully');
+            } else {
+                toast.error(result.message || 'Failed to delete [feature_name]');
+            }
+
+            return result;
+        } catch (err: unknown) {
+            toast.error(getApiError(err, 'Failed to delete [feature_name]'));
+            throw err;
+        } finally {
+            stopSaving();
+        }
+    }
+
+    function setFilters(filters: Partial<[MODEL_NAME]Filters>): void {
+        store.setFilters(filters);
+    }
+
+    function resetFilters(): void {
+        store.resetFilters();
+    }
+
+    if (autoFetch) {
+        onMounted(() => {
+            if (Object.keys(initialFilters).length > 0) {
+                store.setFilters(initialFilters);
+            }
+            fetchAll();
+            startPolling();
+        });
+
+        onUnmounted(() => {
+            stopPolling();
+        });
+    }
+
+    return {
+        [feature_plural],
+        [model_name],
+        pagination,
+        loading,
+        saving,
+        error,
+        fetchAll,
+        fetchById,
+        create,
+        update,
+        delete[MODEL_NAME],
+        setFilters,
+        resetFilters,
+    };
+}

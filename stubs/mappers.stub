@@ -1,0 +1,61 @@
+// FILE: resources/js/Utils/Mappers/[model_name].ts
+
+import type {
+    [MODEL_NAME],
+    [MODEL_NAME]Filters,
+    [MODEL_NAME]Pagination,
+    Create[MODEL_NAME]Dto,
+    Update[MODEL_NAME]Dto,
+} from '@/Types/[MODULE_NAME]/[model_name]';
+
+/**
+ * Map API response to [MODEL_NAME] interface
+ */
+export function mapTo[MODEL_NAME](api: Record<string, any>): [MODEL_NAME] {
+    return {
+        id: api.id,
+[FIELDS]
+        createdAt: api.created_at,
+        updatedAt: api.updated_at,
+    };
+}
+
+/**
+ * Map API pagination to [MODEL_NAME]Pagination interface
+ */
+export function mapTo[MODEL_NAME]Pagination(api: Record<string, any>): [MODEL_NAME]Pagination {
+    return {
+        currentPage: api.current_page || 1,
+        perPage: api.per_page || 15,
+        total: api.total || 0,
+        lastPage: api.last_page || 1,
+    };
+}
+
+/**
+ * Map filters to API query params
+ */
+export function mapTo[MODEL_NAME]FiltersApi(filters: [MODEL_NAME]Filters): Record<string, any> {
+    return {
+        search: filters.search || undefined,
+        status: filters.status || undefined,
+    };
+}
+
+/**
+ * Map Create DTO to API payload
+ */
+export function mapCreate[MODEL_NAME]ToApi(dto: Create[MODEL_NAME]Dto): Record<string, any> {
+    return {
+[FIELDS]
+    };
+}
+
+/**
+ * Map Update DTO to API payload
+ */
+export function mapUpdate[MODEL_NAME]ToApi(dto: Update[MODEL_NAME]Dto): Record<string, any> {
+    return {
+[FIELDS]
+    };
+}

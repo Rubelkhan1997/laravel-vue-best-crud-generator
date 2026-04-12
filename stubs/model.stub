@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Modules\[MODULE]\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+// FILE: app/Modules/[MODULE]/Models/[MODEL].php
+
+class [MODEL] extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $table = '[TABLE]';
+
+    protected $fillable = [
+[FILLABLE]
+[END_FILLABLE]
+    ];
+
+    protected $casts = [
+[CASTS]
+[END_CASTS]
+    ];
+
+    protected $hidden = [
+        // 'deleted_at',
+    ];
+
+[RELATIONSHIPS]
+[END_RELATIONSHIPS]
+
+    /**
+     * Scope: Search by keyword
+     */
+    public function scopeSearch($query, ?string $search = null)
+    {
+        if (!$search) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($search) {
+[SEARCH_COLUMNS]
+[END_SEARCH_COLUMNS]
+        });
+    }
+
+    /**
+     * Scope: Filter by status
+     */
+    public function scopeStatus($query, ?string $status = null)
+    {
+        if (!$status) {
+            return $query;
+        }
+
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Scope: Filter by date range
+     */
+    public function scopeDateRange($query, ?string $from = null, ?string $to = null)
+    {
+        if ($from) {
+            $query->whereDate('created_at', '>=', $from);
+        }
+
+        if ($to) {
+            $query->whereDate('created_at', '<=', $to);
+        }
+
+        return $query;
+    }
+}

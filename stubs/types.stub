@@ -1,0 +1,34 @@
+// FILE: resources/js/Types/[MODULE_NAME]/[model_name].ts
+
+// Single [model_name] record
+export interface [MODEL_NAME] {
+    id: number;
+[FIELDS]
+    createdAt: string;
+    updatedAt: string;
+}
+
+// Create DTO - required fields + optional
+export interface Create[MODEL_NAME]Dto {
+[FIELDS]
+}
+
+// Update DTO - all fields optional
+export interface Update[MODEL_NAME]Dto {
+[FIELDS]
+}
+
+// Filters for index page
+export interface [MODEL_NAME]Filters {
+    search?: string;
+    perPage?: number;
+    status?: string;
+}
+
+// Pagination metadata
+export interface [MODEL_NAME]Pagination {
+    currentPage: number;
+    perPage: number;
+    total: number;
+    lastPage: number;
+}
