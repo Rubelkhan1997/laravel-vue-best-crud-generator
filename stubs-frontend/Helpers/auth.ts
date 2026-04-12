@@ -1,53 +1,26 @@
 /**
- * Auth Helper Functions
- * Authentication utilities
+ * Authentication Helper Functions (Pure)
  */
 
 /**
- * Get token value from cookie
+ * Check if cookie string contains a token.
  */
-export function getTokenFromCookie(cookieString: string, name: string): string | null {
-    const nameEQ = name + '=';
-    const cookies = cookieString.split(';');
-    
-    for (let i = 0; i < cookies.length; i++) {
-        let cookie = cookies[i].trim();
-        if (cookie.indexOf(nameEQ) === 0) {
-            return decodeURIComponent(cookie.substring(nameEQ.length));
-        }
-    }
-    
-    return null;
+export function hasTokenInCookie(cookieString: string, tokenKey = 'auth_token'): boolean {
+    if (!cookieString) return false;
+    return cookieString
+        .split(';')
+        .some((part) => part.trim().startsWith(`${tokenKey}=`));
 }
 
 /**
- * Check if token exists in cookie
+ * Extract token value from cookie string.
  */
-export function hasTokenInCookie(cookieString: string, name: string): boolean {
-    return cookieString.includes(name + '=');
-}
+export function getTokenFromCookie(cookieString: string, tokenKey = 'auth_token'): string | null {
+    if (!cookieString) return null;
+    const cookie = cookieString
+        .split(';')
+        .find((part) => part.trim().startsWith(`${tokenKey}=`));
 
-/**
- * Check if user is authenticated
- */
-export function isAuthenticated(): boolean {
-    const token = localStorage.getItem('auth_token');
-    return !!token || hasTokenInCookie(document.cookie, 'auth_token');
-}
-
-/**
- * Get authenticated user from storage
- */
-export function getAuthUser(): Record<string, any> | null {
-    const user = localStorage.getItem('auth_user');
-    return user ? JSON.parse(user) : null;
-}
-
-/**
- * Check if user has permission
- */
-export function hasPermission(permission: string): boolean {
-    const user = getAuthUser();
-    if (!user || !user.permissions) return false;
-    return user.permissions.includes(permission);
+    if (!cookie) return null;
+    return cookie.split('=')[1] ?? null;
 }

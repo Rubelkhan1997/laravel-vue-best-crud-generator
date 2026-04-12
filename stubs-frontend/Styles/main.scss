@@ -1,0 +1,113 @@
+/**
+ * Styles Entry Point
+ * Import SCSS files
+ */
+
+// Import variables first
+@import './variables.scss';
+
+// Import mixins
+@import './mixins.scss';
+
+// Global styles
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: $color-bg-primary;
+    color: $color-text-primary;
+    line-height: 1.5;
+}
+
+// Utility classes
+.container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 $spacing-md;
+}
+
+// Animation classes
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+// Scrollbar styles
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: $color-bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+    background: $color-border;
+    border-radius: 4px;
+
+    &:hover {
+        background: $color-text-secondary;
+    }
+}
+
+// Focus styles
+:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+}
+
+// Print styles
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}

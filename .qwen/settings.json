@@ -5,7 +5,8 @@
       "Bash(copy *)",
       "Bash(rmdir *)",
       "Bash(dir *)",
-      "Bash(findstr *)"
+      "Bash(findstr *)",
+      "Bash(move *)"
     ]
   },
   "$version": 3

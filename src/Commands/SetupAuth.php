@@ -49,12 +49,12 @@ class SetupAuth extends Command
     {
         $this->info('📦 Generating Backend Auth Files...');
 
+        $backendStubPath = __DIR__ . '/../../stubs-backend';
+        
         $files = [
             "{$stubPath}/auth-controller.stub" => app_path('Modules/Auth/Controllers/Api/V1/AuthController.php'),
             "{$stubPath}/auth-user-model.stub" => app_path('Models/User.php'),
             "{$stubPath}/auth-user-resource.stub" => app_path('Modules/Auth/Resources/UserResource.php'),
-            "{$stubPath}/auth-routes.stub" => base_path('routes/api.php'),
-            "{$stubPath}/auth-web-routes.stub" => base_path('routes/web.php'),
         ];
 
         foreach ($files as $stub => $destination) {
@@ -114,41 +114,125 @@ class SetupAuth extends Command
     protected function updateRoutes(): void
     {
         $this->newLine();
-        $this->info('📦 Setting Up Authentication Routes...');
+        $this->info('📦 Merging Authentication Routes...');
 
-        // Check and update routes/api.php
-        $apiRoutesPath = base_path('routes/api.php');
-        $includeLine = "require __DIR__.'/auth-api.php';";
+        // Merge API routes into routes/api.php
+        $this->mergeApiRoutes();
+
+        // Merge Web routes into routes/web.php
+        $this->mergeWebRoutes();
+    }
+
+    /**
+     * Merge auth API routes directly into routes/api.php
+     */
+    protected function mergeApiRoutes(): void
+    {
+        $apiPath = base_path('routes/api.php');
         
-        if (File::exists($apiRoutesPath)) {
-            $content = File::get($apiRoutesPath);
-            if (strpos($content, $includeLine) === false) {
-                File::append($apiRoutesPath, "\n// Auth API routes\n{$includeLine}\n");
-                $this->info('  ✅ Added auth-api.php include to routes/api.php');
+        // API routes code to inject
+        $apiRoutes = <<<'PHP'
+
+// ─────────────────────────────────────────────────────────
+// Authentication API Routes
+// ─────────────────────────────────────────────────────────
+use App\Modules\Auth\Controllers\Api\V1\AuthController;
+
+Route::prefix('v1/auth')->group(function () {
+    // Public routes
+    Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
+    Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
+
+    // Protected routes
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [AuthController::class, 'me'])->name('auth.me');
+        Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+    });
+});
+PHP;
+
+        $this->mergeCodeIntoFile($apiPath, $apiRoutes, 'Authentication API routes');
+    }
+
+    /**
+     * Merge auth web routes directly into routes/web.php
+     */
+    protected function mergeWebRoutes(): void
+    {
+        $webPath = base_path('routes/web.php');
+        
+        // Web routes code to inject
+        $webRoutes = <<<'PHP'
+
+// ─────────────────────────────────────────────────────────
+// Authentication Web Routes (Inertia)
+// ─────────────────────────────────────────────────────────
+use Inertia\Inertia;
+
+// Dashboard & Home Routes
+Route::get('/', function () {
+    return redirect()->route('dashboard');
+})->name('home');
+
+Route::middleware(['auth.token'])->get('/dashboard', function () {
+    return Inertia::render('Dashboard/Index');
+})->name('dashboard');
+
+// Auth Pages (only for guests)
+Route::middleware(['guest'])->group(function (): void {
+    Route::get('/login', function () {
+        return Inertia::render('Auth/Login');
+    })->name('login');
+    
+    Route::get('/register', function () {
+        return Inertia::render('Auth/Register');
+    })->name('register');
+});
+PHP;
+
+        $this->mergeCodeIntoFile($webPath, $webRoutes, 'Authentication web routes');
+    }
+
+    /**
+     * Smart merge: inject code into file only if not already present
+     */
+    protected function mergeCodeIntoFile(string $filePath, string $code, string $description): void
+    {
+        // Create file if it doesn't exist
+        if (!File::exists($filePath)) {
+            $isApi = strpos($filePath, 'api.php') !== false;
+            $stubPath = __DIR__ . '/../../stubs';
+            
+            if ($isApi && File::exists("{$stubPath}/api-routes.stub")) {
+                // Use stub if exists
+                $content = File::get("{$stubPath}/api-routes.stub");
             } else {
-                $this->info('  ℹ️  auth-api.php already included in routes/api.php');
+                // Create basic route file
+                $content = "<?php\n\nuse Illuminate\\Support\\Facades\\Route;\n";
             }
-        } else {
-            $this->warn('  ⚠️  routes/api.php not found. Create it and add:');
-            $this->info("     {$includeLine}");
+            
+            $content .= "\n{$code}\n";
+            File::put($filePath, $content);
+            $this->info("  ✅ Created {$filePath} with {$description}");
+            return;
         }
 
-        // Check and update routes/web.php
-        $webRoutesPath = base_path('routes/web.php');
-        $includeLine = "require __DIR__.'/auth-web.php';";
+        $content = File::get($filePath);
         
-        if (File::exists($webRoutesPath)) {
-            $content = File::get($webRoutesPath);
-            if (strpos($content, $includeLine) === false) {
-                File::append($webRoutesPath, "\n// Auth web routes (Inertia)\n{$includeLine}\n");
-                $this->info('  ✅ Added auth-web.php include to routes/web.php');
-            } else {
-                $this->info('  ℹ️  auth-web.php already included in routes/web.php');
-            }
-        } else {
-            $this->warn('  ⚠️  routes/web.php not found. Create it and add:');
-            $this->info("     {$includeLine}");
+        // Check if code already exists (look for key identifiers)
+        $alreadyExists = strpos($content, 'auth.login') !== false 
+            || strpos($content, 'AuthController') !== false
+            || strpos($content, 'Authentication API Routes') !== false
+            || strpos($content, 'Authentication web routes') !== false;
+
+        if ($alreadyExists) {
+            $this->info("  ℹ️  {$description} already exist in {$filePath}");
+            return;
         }
+
+        // Append at the end
+        File::append($filePath, "{$code}\n");
+        $this->info("  ✅ Merged {$description} into {$filePath}");
     }
 
     protected function mergeBootstrap(): void
