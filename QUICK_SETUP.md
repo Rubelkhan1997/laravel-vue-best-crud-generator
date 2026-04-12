@@ -23,7 +23,7 @@ Update your root `composer.json`:
 ## 2. Install The Package
 
 ```bash
-composer require rubel/laravel-vue-best-crud-generator:*
+composer require rubel/laravel-vue-best-crud-generator:@dev
 ```
 
 ## 3. Install Or Verify Host App Dependencies
@@ -115,7 +115,7 @@ Warning:
 Use this order:
 
 ```bash
-composer require rubel/laravel-vue-best-crud-generator:*
+composer require rubel/laravel-vue-best-crud-generator:@dev
 php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
 php artisan vendor:publish --tag=laravel-vue-best-crud-generator-stubs
 php artisan make:rubel-crud-module
@@ -131,7 +131,7 @@ php artisan crud-generator:setup-auth
 ### New project or starter template
 
 ```bash
-composer require rubel/laravel-vue-best-crud-generator:*
+composer require rubel/laravel-vue-best-crud-generator:@dev
 composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission
 npm install vue @inertiajs/vue3 pinia axios typescript
 php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
@@ -192,6 +192,14 @@ npm run dev
 ```bash
 php artisan list | findstr crud-generator
 ```
+
+### Stable version error (`could not find a matching version`)
+
+```bash
+composer require rubel/laravel-vue-best-crud-generator:@dev
+```
+
+Alternative (global): set `"minimum-stability": "dev"` in your host app `composer.json`, but `@dev` is safer because it only affects this package.
 
 ## Last Updated
 

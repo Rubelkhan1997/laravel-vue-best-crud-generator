@@ -74,43 +74,118 @@
     </div>
 </template>
 
+
 <script setup lang="ts">
-import { reactive } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
-import { useAuth } from '@/Composables/Auth/useAuth';
+    import { computed } from 'vue';
+    import { useForm, router } from '@inertiajs/vue3';
+    import { useAuth } from '@/Composables/Auth/useAuth';
+    import { useI18n } from '@/Composables/useI18n';
+    import { hasToken } from '@/Utils/authToken';
+    import { required, email as emailRule, validateInertiaForm } from '@/Utils/validation';
+    import type { LoginDto } from '@/Types/Auth/auth';
 
-// FILE: resources/js/Pages/Auth/Login.vue
 
-const { login, loadingAuth, error } = useAuth();
+    // ─── Layout ──────────────────────────────────────────────
+    // Disable the default layout - this is a standalone auth page
+    defineOptions({ layout: null });
 
-const form = reactive({
-    email: '',
-    password: '',
-    remember: false,
-    errors: {} as Record<string, string>,
-});
+    // ─── i18n ────────────────────────────────────────────────
+    // useI18n: provides translation function 't'
+    const { t } = useI18n();
 
-async function handleLogin(): Promise<void> {
-    form.errors = {};
+    // ─── Composable ──────────────────────────────────────────
+    // useAuth: provides login function and loading state
+    // login: sends POST request with email/password
+    // loadingAuth: boolean indicating if login API call is in progress
+    const { login, loadingAuth } = useAuth();
 
-    try {
-        const result = await login({
-            email: form.email,
-            password: form.password,
-            remember: form.remember,
-        });
+    // ─── Guard: already authenticated (check token) ──────────
+    // If user already has a token, redirect to dashboard immediately
+    // Why: Logged-in users shouldn't see the login page
+    if (hasToken()) {
+        router.visit('/dashboard');
+    }
 
-        if (result.status === 1) {
-            router.visit('/dashboard');
+    // ─── Form ────────────────────────────────────────────────
+    // useForm: creates reactive form object with email, password, remember fields
+    // form.errors: tracks validation errors per field
+    // form.processing: true while form is being submitted
+    const form = useForm<LoginDto & { remember: boolean }>({
+        email:    '',
+        password: '',
+        remember: false,
+    });
+
+    // isSaving: true if form is processing OR login API call is in progress
+    const isLoading   = computed(() => form.processing || loadingAuth.value);
+    
+    // submitLabel: dynamic button text
+    // Shows "Signing in..." while loading, "Sign In" otherwise
+    const submitLabel = computed(() => isLoading.value ? t('auth.signing_in') : t('auth.sign_in'));
+
+    // ─── Submit ────────────────────────────────────────────── 
+    async function submit(): Promise<void> {
+        // Clear all previous validation errors
+        form.clearErrors();
+ 
+        // If any rule fails, validateForm returns false
+        if (!validateForm()) {
+            scrollToFirstError();
+            return;
         }
-    } catch (err: unknown) {
-        const apiErr = err as Record<string, any>;
-        if (apiErr?.response?.data?.errors) {
-            const backendErrors: Record<string, string[]> = apiErr.response.data.errors;
-            Object.entries(backendErrors).forEach(([key, messages]) => {
-                form.errors[key] = messages[0];
+
+        try {
+            // Send login request with email, password, and remember preference
+            const result = await login({ 
+                email: form.email, 
+                password: form.password, 
+                remember: form.remember 
             });
+
+            // On success, redirect to dashboard
+            if (result?.status == 1) {
+                form.reset();  
+                router.visit('/dashboard');
+            }
+        } catch (err: unknown) {
+            // Handle API errors
+            const apiErr = err as Record<string, any>;
+
+            // 422 = Validation Error (e.g., invalid email format)
+            // Backend returns: { response: { data: { errors: { field: ['message'] } } } }
+            if (apiErr?.response?.status === 422) {
+                const backendErrors: Record<string, string[]> = apiErr.response.data?.errors ?? {};
+                Object.entries(backendErrors).forEach(([key, messages]) => {
+                    form.setError(key as any, messages[0]);  // Set first error message for each field
+                });
+                scrollToFirstError();
+            } 
+            // 401 = Unauthorized (wrong email/password combination)
+            else if (apiErr?.response?.status === 401) {
+                // Show generic "invalid credentials" message on email field
+                form.setError('email', t('auth.invalid_credentials'));
+            }
         }
     }
-}
+
+    // ─── Validation ────────────────────────────────────────── 
+    function validateForm(): boolean {
+        return validateInertiaForm(form, {
+            email:    [required, emailRule],
+            password: [required],
+        });
+    }
+
+    // scrollToFirstError: auto-scrolls page to first field with validation error
+    // Why: Improves UX by showing user which field needs attention
+    // How: Finds first element with .border-red-500 class (applied on error)
+    function scrollToFirstError(): void {
+        setTimeout(() => {
+            // Wait 100ms to ensure DOM has updated with error classes
+            const firstError = document.querySelector('.border-red-500');
+            // Scroll the error field into view with smooth animation
+            firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
 </script>
+

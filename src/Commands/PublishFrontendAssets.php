@@ -96,16 +96,15 @@ class PublishFrontendAssets extends Command
             "{$stubPath}/Components/Form/TimePicker.vue" => "{$targetPath}/Components/Form/TimePicker.vue",
             "{$stubPath}/Components/Form/FileUpload.vue" => "{$targetPath}/Components/Form/FileUpload.vue",
             
-            // Middleware
-            "{$stubPath}/Middleware/SecurityHeaders.php" => app_path('Http/Middleware/SecurityHeaders.php'),
-            "{$stubPath}/Middleware/HandleInertiaRequests.php" => app_path('Http/Middleware/HandleInertiaRequests.php'),
-            "{$stubPath}/Middleware/AuthenticateByToken.php" => app_path('Modules/Auth/Middleware/AuthenticateByToken.php'),
-            
-            // Bootstrap
-            "{$stubPath}/bootstrap/app.php" => base_path('bootstrap/app.php'),
-            
             // Entry point
             "{$stubPath}/app.ts" => "{$targetPath}/app.ts",
+
+            // TypeScript Configuration
+            "{$stubPath}/tsconfig.json" => base_path('tsconfig.json'),
+            "{$stubPath}/env.d.ts" => "{$targetPath}/env.d.ts",
+
+            // Vite Configuration
+            "{$stubPath}/vite.config.js" => base_path('vite.config.js'),
         ];
 
         $published = 0;

@@ -4,6 +4,7 @@ namespace Rubel\LaravelVueBestCrudGenerator;
 
 use Illuminate\Support\ServiceProvider;
 use Rubel\LaravelVueBestCrudGenerator\Commands\MakeCrudModule;
+use Rubel\LaravelVueBestCrudGenerator\Commands\MergeBootstrap;
 use Rubel\LaravelVueBestCrudGenerator\Commands\PublishFrontendAssets;
 use Rubel\LaravelVueBestCrudGenerator\Commands\SetupAuth;
 
@@ -32,6 +33,7 @@ class LaravelVueBestCrudGeneratorServiceProvider extends ServiceProvider
                 MakeCrudModule::class,
                 PublishFrontendAssets::class,
                 SetupAuth::class,
+                MergeBootstrap::class,
             ]);
         }
     }

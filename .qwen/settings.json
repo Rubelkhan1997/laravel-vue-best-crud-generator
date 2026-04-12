@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir *)",
+      "Bash(copy *)",
+      "Bash(rmdir *)",
+      "Bash(dir *)",
+      "Bash(findstr *)"
+    ]
+  },
+  "$version": 3
+}

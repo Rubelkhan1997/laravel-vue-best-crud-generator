@@ -80,45 +80,118 @@
     </div>
 </template>
 
+
 <script setup lang="ts">
-import { reactive } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
-import { useAuth } from '@/Composables/Auth/useAuth';
+    import { computed } from 'vue';
+    import { useForm, router } from '@inertiajs/vue3';
+    import { useAuth } from '@/Composables/Auth/useAuth';
+    import { useI18n } from '@/Composables/useI18n';
+    import { hasToken } from '@/Utils/authToken';
+    import { required, email as emailRule, minLength, confirmed, validateInertiaForm } from '@/Utils/validation';
+    import type { RegisterDto } from '@/Types/Auth/auth';
 
-// FILE: resources/js/Pages/Auth/Register.vue
+    // ─── Layout ──────────────────────────────────────────────
+    // Disable the default layout - this is a standalone auth page
+    defineOptions({ layout: null });
 
-const { register, loadingAuth, error } = useAuth();
+    // ─── i18n ────────────────────────────────────────────────
+    // useI18n: provides translation function 't'
+    const { t } = useI18n();
 
-const form = reactive({
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
-    errors: {} as Record<string, string>,
-});
+    // ─── Composable ──────────────────────────────────────────
+    // useAuth: provides register function and loading state
+    // register: sends POST request with user data to create account
+    // loadingAuth: boolean indicating if register API call is in progress
+    const { register, loadingAuth } = useAuth();
 
-async function handleRegister(): Promise<void> {
-    form.errors = {};
+    // ─── Guard: already authenticated (check token) ──────────
+    // If user already has a token, redirect to dashboard immediately
+    // Why: Logged-in users shouldn't see the registration page
+    if (hasToken()) {
+        router.visit('/dashboard');
+    }
 
-    try {
-        const result = await register({
-            name: form.name,
-            email: form.email,
-            password: form.password,
-            password_confirmation: form.password_confirmation,
-        });
+    // ─── Form ────────────────────────────────────────────────
+    // useForm: creates reactive form object with registration fields
+    // form.errors: tracks validation errors per field
+    // form.processing: true while form is being submitted
+    const form = useForm<RegisterDto>({
+        name:                  '',
+        email:                 '',
+        password:              '',
+        password_confirmation: '',
+        role:                  'staff',
+    });
 
-        if (result.status === 1) {
-            router.visit('/dashboard');
+    // isLoading: true if form is processing OR register API call is in progress
+    // Used to disable submit button during registration
+    const isLoading   = computed(() => form.processing || loadingAuth.value);
+    
+    // submitLabel: dynamic button text
+    // Shows "Creating account..." while loading, "Create Account" otherwise
+    const submitLabel = computed(() => isLoading.value ? t('auth.creating_account') : t('auth.create_account'));
+
+    // ─── Submit ──────────────────────────────────────────────
+    async function submit(): Promise<void> {
+        // Clear all previous validation errors
+        form.clearErrors();
+
+        // If any rule fails, validateForm returns false
+        if (!validateForm()) {
+            scrollToFirstError();
+            return;
         }
-    } catch (err: unknown) {
-        const apiErr = err as Record<string, any>;
-        if (apiErr?.response?.data?.errors) {
-            const backendErrors: Record<string, string[]> = apiErr.response.data.errors;
-            Object.entries(backendErrors).forEach(([key, messages]) => {
-                form.errors[key] = messages[0];
+
+        try {
+            // Send registration data to backend API
+            const result = await register({
+                name:                  form.name,
+                email:                 form.email,
+                password:              form.password,
+                password_confirmation: form.password_confirmation,
+                role:                  form.role,
             });
+
+            // On success, redirect to dashboard
+            if (result?.status == 1) {
+                router.visit('/dashboard');
+            }
+
+        } catch (err: unknown) {
+            // Handle API errors
+            const apiErr = err as Record<string, any>;
+
+            // 422 = Validation Error (e.g., email already taken, password too short)
+            // Backend returns: { response: { data: { errors: { field: ['message'] } } } }
+            if (apiErr?.response?.status === 422) {
+                const backendErrors: Record<string, string[]> = apiErr.response.data?.errors ?? {};
+                Object.entries(backendErrors).forEach(([key, messages]) => {
+                    form.setError(key as any, messages[0]);  // Set first error message for each field
+                });
+                scrollToFirstError();
+            }
         }
     }
-}
+
+    // ─── Validation ──────────────────────────────────────────
+    function validateForm(): boolean {
+        return validateInertiaForm(form, {
+            name:                  [required],
+            email:                 [required, emailRule],
+            password:              [required, minLength(8)],
+            password_confirmation: [required, confirmed(() => form.password)],
+        });
+    }
+
+    // scrollToFirstError: auto-scrolls page to first field with validation error
+    // Why: Improves UX by showing user which field needs attention
+    // How: Finds first element with .border-red-500 class (applied on error)
+    function scrollToFirstError(): void {
+        setTimeout(() => {
+            // Wait 100ms to ensure DOM has updated with error classes
+            const firstError = document.querySelector('.border-red-500');
+            // Scroll the error field into view with smooth animation
+            firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
 </script>

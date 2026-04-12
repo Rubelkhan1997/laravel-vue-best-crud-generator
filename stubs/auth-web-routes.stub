@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+
+// FILE: routes/web.php
+// Web routes for authentication (Inertia pages)
+
+// ─────────────────────────────────────────────────────────
+// Dashboard & Home Routes
+// ─────────────────────────────────────────────────────────
+Route::get('/', function () {
+    return redirect()->route('dashboard');
+})->name('home');
+
+Route::middleware(['auth.token'])->get('/dashboard', function () {
+    return Inertia::render('Dashboard/Index');
+})->name('dashboard');
+
+// ─────────────────────────────────────────────────────────
+// Authentication Routes (Inertia Pages)
+// ─────────────────────────────────────────────────────────
+Route::middleware(['guest'])->group(function (): void {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+});
