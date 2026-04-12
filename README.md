@@ -9,6 +9,133 @@ It is designed for projects that follow patterns like:
 - Pinia stores in `resources/js/Stores/[Module]/...`
 - Shared frontend structure such as `Helpers`, `Composables`, `Utils`, `Plugins`, `Layouts`, and `Components`
 
+## Requirements
+
+Before installing this package, the host project should be compatible with:
+
+- PHP `8.2+`
+- Laravel `11`, `12`, or `13`
+- Inertia Laravel `2.x`
+- Vue `3`
+- TypeScript
+- Vite-based frontend build
+
+For best results, the host project should already be a Laravel + Inertia + Vue application or be prepared to become one.
+
+## What Gets Installed Automatically
+
+When you run:
+
+```bash
+composer require rubel/laravel-vue-best-crud-generator
+```
+
+Composer will install or resolve the package dependencies declared in this package:
+
+- `php`
+- `laravel/framework`
+- `inertiajs/inertia-laravel`
+
+This means backend PHP dependencies listed above are handled by Composer automatically.
+
+## What You Must Install Manually
+
+This package does not automatically install NPM packages for the host application.
+
+You should manually ensure these frontend packages exist in the host project:
+
+```bash
+npm install vue @inertiajs/vue3 pinia axios typescript
+```
+
+Usually the host app should also have:
+
+```bash
+npm install -D vite @vitejs/plugin-vue laravel-vite-plugin
+```
+
+## Recommended Manual Backend Packages
+
+Some package features and published stubs assume these packages exist in the host app:
+
+```bash
+composer require laravel/sanctum spatie/laravel-permission
+```
+
+Why these are recommended:
+
+- `laravel/sanctum`: API/session auth-related flows and generated auth/API routes
+- `spatie/laravel-permission`: permission middleware and permission-aware frontend/auth stubs
+
+These are best treated as host-project requirements, not forced package dependencies.
+
+## Installation
+
+### A. Install from a local `packages/` directory
+
+If the package lives inside your current Laravel project, add this to root `composer.json`:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/rubel/laravel-vue-best-crud-generator",
+            "options": {
+                "symlink": true
+            }
+        }
+    ]
+}
+```
+
+Then install:
+
+```bash
+composer require rubel/laravel-vue-best-crud-generator:*
+```
+
+### B. Install from GitHub / Packagist later
+
+```bash
+composer require rubel/laravel-vue-best-crud-generator
+```
+
+## Recommended Install Order
+
+### Existing structured project
+
+If your project already has its own auth, middleware, and frontend structure:
+
+```bash
+composer require rubel/laravel-vue-best-crud-generator:*
+php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
+php artisan vendor:publish --tag=laravel-vue-best-crud-generator-stubs
+php artisan make:rubel-crud-module
+```
+
+Optional only if needed:
+
+```bash
+php artisan crud-generator:publish-assets
+php artisan crud-generator:setup-auth
+```
+
+### New project or starter-like project
+
+```bash
+composer require rubel/laravel-vue-best-crud-generator:*
+composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission
+npm install vue @inertiajs/vue3 pinia axios typescript
+npm install -D vite @vitejs/plugin-vue laravel-vite-plugin
+php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
+php artisan crud-generator:publish-assets
+php artisan crud-generator:setup-auth
+php artisan make:rubel-crud-module
+php artisan migrate
+npm run dev
+```
+
 ## What The Package Provides
 
 ### 1. CRUD module generator
@@ -51,96 +178,6 @@ php artisan crud-generator:setup-auth
 ```
 
 Publishes a basic auth starter for backend and frontend.
-
-## Target Stack
-
-The package assumes a Laravel app already using or ready to use:
-
-- PHP `^8.2`
-- Laravel `^11.0|^12.0|^13.0`
-- `inertiajs/inertia-laravel` `^2.0`
-- Vue 3
-- `@inertiajs/vue3`
-- Pinia
-- Axios
-- TypeScript
-
-Recommended when using the shared auth and permission-aware frontend stubs:
-
-- `laravel/sanctum`
-- `spatie/laravel-permission`
-
-## Dependencies
-
-### Composer dependencies
-
-Required by package:
-
-- `php`
-- `laravel/framework`
-- `inertiajs/inertia-laravel`
-
-Recommended in host application:
-
-- `laravel/sanctum`
-- `spatie/laravel-permission`
-
-### NPM dependencies expected in host application
-
-- `vue`
-- `@inertiajs/vue3`
-- `pinia`
-- `axios`
-- `typescript`
-
-Your host app will typically also already have:
-
-- `vite`
-- `@vitejs/plugin-vue`
-- `laravel-vite-plugin`
-
-## Installation
-
-### A. Install from a local `packages/` directory
-
-If the package lives inside your current Laravel project:
-
-```json
-{
-    "repositories": [
-        {
-            "type": "path",
-            "url": "packages/rubel/laravel-vue-best-crud-generator",
-            "options": {
-                "symlink": true
-            }
-        }
-    ]
-}
-```
-
-Then run:
-
-```bash
-composer require rubel/laravel-vue-best-crud-generator:*
-```
-
-### B. Install from Packagist or VCS later
-
-```bash
-composer require rubel/laravel-vue-best-crud-generator
-```
-
-## Recommended Host App Setup
-
-For a fresh or partially prepared Laravel + Vue project:
-
-```bash
-composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission
-npm install vue @inertiajs/vue3 pinia axios typescript
-```
-
-If these are already present in your existing project, do not reinstall them unnecessarily.
 
 ## Publishable Assets
 
@@ -198,12 +235,6 @@ Typical prompt flow:
 8. Enums
 9. Confirm generation
 
-Example:
-
-```bash
-php artisan make:rubel-crud-module
-```
-
 ### `php artisan crud-generator:publish-assets`
 
 Copies shared frontend assets into the host application.
@@ -249,42 +280,6 @@ This command may create or overwrite files such as:
 - `bootstrap/app.php`
 
 For an already structured existing project, review before using `--force`.
-
-## Recommended Install Flow
-
-### Existing structured project
-
-Best when your project already has its own auth, app shell, middleware, and frontend setup:
-
-```bash
-composer require rubel/laravel-vue-best-crud-generator:*
-php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
-php artisan vendor:publish --tag=laravel-vue-best-crud-generator-stubs
-php artisan make:rubel-crud-module
-```
-
-Optional:
-
-```bash
-php artisan crud-generator:publish-assets
-php artisan crud-generator:setup-auth
-```
-
-Only run those optional commands after checking file conflicts.
-
-### New or starter-like project
-
-```bash
-composer require rubel/laravel-vue-best-crud-generator:*
-composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission
-npm install vue @inertiajs/vue3 pinia axios typescript
-php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
-php artisan crud-generator:publish-assets
-php artisan crud-generator:setup-auth
-php artisan make:rubel-crud-module
-php artisan migrate
-npm run dev
-```
 
 ## Generated Structure
 
