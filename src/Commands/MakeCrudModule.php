@@ -374,7 +374,7 @@ class MakeCrudModule extends Command
         $content = $this->replacePlaceholders($content);
         $content = str_replace('[permission_action]', 'create', $content);
 
-        $path = base_path("app/Modules/{$this->moduleName}/Requests/{$this->modelName}StoreRequest.php");
+        $path = base_path("app/Modules/{$this->moduleName}/Requests/Store{$this->modelName}Request.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
 
@@ -386,9 +386,9 @@ class MakeCrudModule extends Command
         $content = $this->getStub('form-request');
         $content = str_replace('[REQUEST_TYPE]', 'Update', $content);
         $content = $this->replacePlaceholders($content);
-        $content = str_replace('[permission_action]', 'update', $content);
+        $content = str_replace('[permission_action]', 'edit', $content);
 
-        $path = base_path("app/Modules/{$this->moduleName}/Requests/{$this->modelName}UpdateRequest.php");
+        $path = base_path("app/Modules/{$this->moduleName}/Requests/Update{$this->modelName}Request.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
 
@@ -1324,8 +1324,6 @@ class MakeCrudModule extends Command
 
             if ($f['required']) {
                 $rules[] = 'required';
-            } else {
-                $rules[] = 'nullable';
             }
 
             $typeRules = $this->getClientTypeRules($f['type']);
@@ -1374,7 +1372,6 @@ class MakeCrudModule extends Command
     {
         return match ($this->getVueFieldType($dbType)) {
             'email' => ['email'],
-            'number' => ['numeric'],
             default => [],
         };
     }

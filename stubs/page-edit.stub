@@ -61,7 +61,7 @@
     import { use[MODEL_NAME]s } from '@/Composables/[MODULE_NAME]/use[MODEL_NAME]s';
     import { useI18n } from '@/Composables/useI18n';
     import { usePermissionService } from '@/Composables/usePermissionService';
-    import { required, validateInertiaForm } from '@/Utils/validation';
+    import { required, email, validateInertiaForm } from '@/Utils/validation';
     import type { [MODEL_NAME], Update[MODEL_NAME]Dto } from '@/Types/[MODULE_NAME]/[model_name]';
     import { mapTo[MODEL_NAME] } from '@/Utils/Mappers/[model_name]';
 

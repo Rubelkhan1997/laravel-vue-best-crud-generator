@@ -6,8 +6,8 @@ namespace App\Modules\[MODULE]\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Modules\[MODULE]\Data\[MODEL]Data;
-use App\Modules\[MODULE]\Requests\[MODEL]StoreRequest;
-use App\Modules\[MODULE]\Requests\[MODEL]UpdateRequest;
+use App\Modules\[MODULE]\Requests\Store[MODEL]Request;
+use App\Modules\[MODULE]\Requests\Update[MODEL]Request;
 use App\Modules\[MODULE]\Resources\[MODEL]Resource;
 use App\Modules\[MODULE]\Services\[MODEL]Service;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -74,7 +74,7 @@ class [MODEL]Controller extends Controller
     /**
      * Store a newly created resource.
      */
-    public function store([MODEL]StoreRequest $request): JsonResponse
+    public function store(Store[MODEL]Request $request): JsonResponse
     {
         $[model_name]Data = [MODEL]Data::from($request->validated());
         $[model_name] = $this->service->create($[model_name]Data);
@@ -89,7 +89,7 @@ class [MODEL]Controller extends Controller
     /**
      * Update the specified resource.
      */
-    public function update([MODEL]UpdateRequest $request, int $id): JsonResponse
+    public function update(Update[MODEL]Request $request, int $id): JsonResponse
     {
         try {
             $[model_name]Data = [MODEL]Data::from($request->validated());
