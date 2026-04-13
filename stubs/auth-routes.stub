@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Modules\Auth\Controllers\Api\V1\AuthController;
+use Illuminate\Support\Facades\Route;
 
-// FILE: routes/api.php - Auth Routes
-
-// Auth routes (no authentication required)
+// Auth routes
 Route::prefix('v1/auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
-    
+
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me'])->name('auth.me');

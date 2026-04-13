@@ -1,42 +1,56 @@
 <?php
 
-namespace App\Modules\[MODULE]\Http\Requests;
+declare(strict_types=1);
 
+namespace App\Modules\[MODULE]\Requests;
+
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-
-// FILE: app/Modules/[MODULE]/Http/Requests/[MODEL][REQUEST_TYPE]Request.php
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class [MODEL][REQUEST_TYPE]Request extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Determine whether the user is authorized.
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('[permission_action] [feature_plural]');
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Get the validation rules.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-[VALIDATION_RULES]
+[VALIDATION_RULES_ARRAY]
         ];
     }
 
     /**
      * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            // 'field.required' => 'The field is required.',
+[VALIDATION_MESSAGES]
         ];
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     */
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'status' => 0,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422)
+        );
     }
 }

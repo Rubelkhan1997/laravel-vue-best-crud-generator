@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Modules\[MODULE]\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-
-// FILE: app/Modules/[MODULE]/Resources/[MODEL]Resource.php
 
 class [MODEL]Resource extends JsonResource
 {
@@ -19,8 +19,8 @@ class [MODEL]Resource extends JsonResource
         return [
             'id' => $this->id,
 [FIELDS]
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
         ];
     }
 }

@@ -13,7 +13,7 @@ Reusable CRUD scaffolding package for Laravel + Vue + Inertia projects.
 Recommended in host project:
 
 ```bash
-composer require laravel/sanctum spatie/laravel-permission
+composer require laravel/sanctum spatie/laravel-permission spatie/laravel-data
 npm install vue @inertiajs/vue3 pinia axios typescript
 ```
 
@@ -55,7 +55,7 @@ php artisan make:rubel-crud-module
 
 ```bash
 composer require rubel/laravel-vue-best-crud-generator:@dev
-composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission
+composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission spatie/laravel-data
 php artisan crud-generator:publish-assets
 npm install
 npm run dev

@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Modules\Auth\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-
-// FILE: app/Modules/Auth/Resources/UserResource.php
 
 class UserResource extends JsonResource
 {
@@ -21,8 +21,8 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role ?? $this->roles()->first()?->name,
-            'roles' => $this->getRoleNames()?->values() ?? [],
-            'permissions' => $this->getAllPermissions()?->pluck('name')->values() ?? [],
+            'roles' => $this->getRoleNames()->values(),
+            'permissions' => $this->getAllPermissions()->pluck('name')->values(),
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

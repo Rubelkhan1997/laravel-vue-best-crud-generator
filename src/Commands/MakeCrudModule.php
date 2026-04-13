@@ -268,6 +268,8 @@ class MakeCrudModule extends Command
         $this->generateStoreRequest();
         $this->generateUpdateRequest();
         $this->generateResource();
+        $this->generateData();
+        $this->generateAction();
     }
 
     protected function generateFrontendFiles(): void
@@ -370,11 +372,12 @@ class MakeCrudModule extends Command
         $content = $this->getStub('form-request');
         $content = str_replace('[REQUEST_TYPE]', 'Store', $content);
         $content = $this->replacePlaceholders($content);
-        
-        $path = base_path("app/Modules/{$this->moduleName}/Http/Requests/{$this->modelName}StoreRequest.php");
+        $content = str_replace('[permission_action]', 'create', $content);
+
+        $path = base_path("app/Modules/{$this->moduleName}/Requests/{$this->modelName}StoreRequest.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
-        
+
         $this->info("✅ Store Request: {$path}");
     }
 
@@ -383,11 +386,12 @@ class MakeCrudModule extends Command
         $content = $this->getStub('form-request');
         $content = str_replace('[REQUEST_TYPE]', 'Update', $content);
         $content = $this->replacePlaceholders($content);
-        
-        $path = base_path("app/Modules/{$this->moduleName}/Http/Requests/{$this->modelName}UpdateRequest.php");
+        $content = str_replace('[permission_action]', 'update', $content);
+
+        $path = base_path("app/Modules/{$this->moduleName}/Requests/{$this->modelName}UpdateRequest.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
-        
+
         $this->info("✅ Update Request: {$path}");
     }
 
@@ -395,12 +399,36 @@ class MakeCrudModule extends Command
     {
         $content = $this->getStub('resource');
         $content = $this->replacePlaceholders($content);
-        
+
         $path = base_path("app/Modules/{$this->moduleName}/Resources/{$this->modelName}Resource.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
-        
+
         $this->info("✅ Resource: {$path}");
+    }
+
+    protected function generateData(): void
+    {
+        $content = $this->getStub('data');
+        $content = $this->replacePlaceholders($content);
+
+        $path = base_path("app/Modules/{$this->moduleName}/Data/{$this->modelName}Data.php");
+        File::ensureDirectoryExists(dirname($path));
+        File::put($path, $content);
+
+        $this->info("✅ Data: {$path}");
+    }
+
+    protected function generateAction(): void
+    {
+        $content = $this->getStub('action');
+        $content = $this->replacePlaceholders($content);
+
+        $path = base_path("app/Modules/{$this->moduleName}/Actions/Create{$this->modelName}Action.php");
+        File::ensureDirectoryExists(dirname($path));
+        File::put($path, $content);
+
+        $this->info("✅ Action: {$path}");
     }
 
     protected function generateTypes(): void
@@ -547,7 +575,6 @@ class MakeCrudModule extends Command
             '[RELATIONSHIPS]',
             '[SEARCH_COLUMNS]',
             '[FIELDS]',
-            '[VALIDATION_RULES]',
             '[COLUMNS]',
             '[END_FILLABLE]',
             '[END_CASTS]',
@@ -567,6 +594,11 @@ class MakeCrudModule extends Command
             '[FIELDS_COLUMNS]',
             '[FIELDS_SHOW]',
             '[FIELDS_SHOW_TITLE]',
+            '[DATA_PROPERTIES]',
+            '[VALIDATION_MESSAGES]',
+            '[VALIDATION_RULES_ARRAY]',
+            '[permission_action]',
+            '[REQUEST_TYPE]',
         ];
 
         $replace = [
@@ -590,7 +622,6 @@ class MakeCrudModule extends Command
             $this->getRelationships(),
             $this->getSearchColumns(),
             $this->getFieldsList(),
-            $this->getValidationRules(),
             $this->getMigrationColumns(),
             '',
             '',
@@ -610,6 +641,10 @@ class MakeCrudModule extends Command
             $this->getFieldsColumns(),
             $this->getFieldsShow(),
             $this->getFieldsShowTitle(),
+            $this->getDataProperties(),
+            $this->getValidationMessages(),
+            $this->getValidationRulesArray(),
+            'edit',
         ];
 
         return str_replace($search, $replace, $content);
@@ -654,20 +689,23 @@ class MakeCrudModule extends Command
                 default => 'Relation',
             };
 
-            $methods[] = "    public function {$rel['method']}: {$returnType}\n    {\n        return \$this->{$rel['type']}({$rel['model']}::class);\n    }";
+            $methods[] = "\n    /**\n     * Get the {$rel['method']}.\n     */\n    public function {$rel['method']}(): {$returnType}\n    {\n        return \$this->{$rel['type']}({$rel['model']}::class);\n    }";
         }
 
-        return implode("\n\n", $methods);
+        return implode("\n", $methods);
     }
 
     protected function getSearchColumns(): string
     {
         $columns = collect($this->fields)
             ->filter(fn($f) => in_array($f['type'], ['string', 'text']))
-            ->take(3)
-            ->map(fn($f) => "            \$q->where('{$f['name']}', 'like', \"%{\$search}%\")")
+            ->take(5)
+            ->map(function ($f, $index) {
+                $method = $index === 0 ? 'where' : 'orWhere';
+                return "                \$q->{$method}('{$f['name']}', 'like', \"%{\$search}%\")";
+            })
             ->implode("\n");
-        
+
         return $columns;
     }
 
@@ -675,7 +713,22 @@ class MakeCrudModule extends Command
     {
         return collect($this->fields)
             ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']))
-            ->map(fn($f) => "        {$f['name']}: source.{$f['name']},")
+            ->map(function ($f) {
+                $fieldName = $f['name'];
+
+                // Handle enum fields
+                $enum = collect($this->enums)->first(fn($e) => $e['field'] === $fieldName);
+                if ($enum) {
+                    return "            '{$fieldName}' => \$this->{$fieldName}?->value,\n            '{$fieldName}_label' => \$this->{$fieldName}?->label(),";
+                }
+
+                // Handle date/datetime fields
+                if (in_array($f['type'], ['date', 'datetime', 'timestamp'])) {
+                    return "            '{$fieldName}' => \$this->{$fieldName}?->format('Y-m-d'),";
+                }
+
+                return "            '{$fieldName}' => \$this->{$fieldName},";
+            })
             ->implode("\n");
     }
 
@@ -810,6 +863,127 @@ class MakeCrudModule extends Command
     }
 
     /**
+     * Generate custom validation messages for form requests.
+     */
+    protected function getValidationMessages(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        $messages = [];
+        foreach ($userFields as $f) {
+            $fieldName = $f['name'];
+            $label = Str::headline($fieldName);
+
+            if ($f['required']) {
+                $messages[] = "            '{$fieldName}.required' => '{$label} is required',";
+            }
+            if ($f['unique']) {
+                $messages[] = "            '{$fieldName}.unique' => '{$label} has already been taken',";
+            }
+            if ($f['type'] === 'email') {
+                $messages[] = "            '{$fieldName}.email' => 'Please enter a valid email address',";
+            }
+        }
+
+        return implode("\n", $messages);
+    }
+
+    /**
+     * Generate validation rules as PHP array format for Form Requests.
+     * Uses Laravel's array-style validation rules.
+     */
+    protected function getValidationRulesArray(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+            $rules = [];
+
+            if ($f['required']) {
+                $rules[] = "'required'";
+            } else {
+                $rules[] = "'nullable'";
+            }
+
+            // Add type rules
+            if (in_array($f['type'], ['string', 'text', 'varchar'])) {
+                $rules[] = "'string'";
+                $rules[] = "'max:255'";
+            }
+            if ($f['type'] === 'email') {
+                $rules[] = "'email'";
+                $rules[] = "'max:255'";
+            }
+            if (in_array($f['type'], ['int', 'integer', 'bigint'])) {
+                $rules[] = "'integer'";
+            }
+            if (in_array($f['type'], ['bool', 'boolean'])) {
+                $rules[] = "'boolean'";
+            }
+            if (in_array($f['type'], ['decimal', 'float', 'double'])) {
+                $rules[] = "'numeric'";
+            }
+
+            // Add unique rule
+            if ($f['unique']) {
+                $rules[] = "'unique:{$this->tableName},{$fieldName}'";
+            }
+
+            return "            '{$fieldName}' => [" . implode(', ', $rules) . "],";
+        })->implode("\n");
+    }
+
+    /**
+     * Generate Data class constructor properties.
+     */
+    protected function getDataProperties(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+            $phpType = $this->getPhpType($f['type']);
+            $nullable = $f['nullable'];
+
+            if ($nullable) {
+                return "        public ?{$phpType} \${$fieldName} = null,";
+            }
+
+            return "        public {$phpType} \${$fieldName},";
+        })->implode("\n");
+    }
+
+    /**
+     * Map database type to PHP type.
+     */
+    protected function getPhpType(string $dbType): string
+    {
+        return match ($dbType) {
+            'int', 'integer', 'bigint', 'tinyint', 'smallint', 'mediumint' => 'int',
+            'bool', 'boolean' => 'bool',
+            'decimal', 'float', 'double' => 'float',
+            'json' => 'array',
+            default => 'string',
+        };
+    }
+
+    /**
      * Generate table header definitions for index page.
      */
     protected function getFieldsHeaders(): string
@@ -904,21 +1078,22 @@ class MakeCrudModule extends Command
             ->map(function ($f) {
                 $rules = [];
                 if ($f['required']) {
-                    $rules[] = 'required';
+                    $rules[] = "'required'";
                     if ($f['type'] === 'string') {
-                        $rules[] = 'string';
+                        $rules[] = "'string'";
                     }
                     if ($f['type'] === 'email') {
-                        $rules[] = 'email';
+                        $rules[] = "'email'";
                     }
                 } else {
-                    $rules[] = 'nullable';
+                    $rules[] = "'nullable'";
                 }
                 if ($f['unique']) {
-                    $rules[] = 'unique:' . $this->tableName . ',' . $f['name'];
+                    $rules[] = "'unique:" . $this->tableName . "," . $f['name'] . "'";
                 }
-                
-                return "            '{$f['name']}' => '" . implode('|', $rules) . "',";
+
+                $rulesStr = implode(', ', $rules);
+                return "            '{$f['name']}' => [{$rulesStr}],";
             })
             ->implode("\n");
     }

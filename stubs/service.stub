@@ -4,16 +4,23 @@ declare(strict_types=1);
 
 namespace App\Modules\[MODULE]\Services;
 
+use App\Modules\[MODULE]\Actions\Create[MODEL]Action;
+use App\Modules\[MODULE]\Data\[MODEL]Data;
 use App\Modules\[MODULE]\Models\[MODEL];
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-// FILE: app/Modules/[MODULE]/Services/[MODEL]Service.php
-
 readonly class [MODEL]Service
 {
     /**
-     * Return a paginated list with filters.
+     * Create a new service instance.
+     */
+    public function __construct(private Create[MODEL]Action $createAction)
+    {
+    }
+
+    /**
+     * Return a paginated list.
      */
     public function paginate(array $filters = [], int $page = 1, int $perPage = 15): LengthAwarePaginator
     {
@@ -24,7 +31,6 @@ readonly class [MODEL]Service
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
 [SEARCH_COLUMNS]
-[END_SEARCH_COLUMNS]
             });
         }
 
@@ -42,21 +48,21 @@ readonly class [MODEL]Service
     /**
      * Store a new record.
      */
-    public function create(array $payload): [MODEL]
+    public function create([MODEL]Data $payload): [MODEL]
     {
         return DB::transaction(function () use ($payload): [MODEL] {
-            return [MODEL]::create($payload);
+            return ($this->createAction)($payload->toArray());
         });
     }
 
     /**
      * Update an existing record.
      */
-    public function update(int $id, array $payload): [MODEL]
+    public function update(int $id, [MODEL]Data $payload): [MODEL]
     {
         return DB::transaction(function () use ($id, $payload): [MODEL] {
             $model = $this->find($id);
-            $model->update($payload);
+            $model->update($payload->toArray());
             return $model;
         });
     }

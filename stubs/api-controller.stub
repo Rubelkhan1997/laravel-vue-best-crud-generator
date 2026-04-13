@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Modules\[MODULE]\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Modules\[MODULE]\Models\[MODEL];
+use App\Modules\[MODULE]\Data\[MODEL]Data;
+use App\Modules\[MODULE]\Requests\Store[MODEL]Request;
+use App\Modules\[MODULE]\Requests\Update[MODEL]Request;
+use App\Modules\[MODULE]\Resources\[MODEL]Resource;
 use App\Modules\[MODULE]\Services\[MODEL]Service;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
-// FILE: app/Modules/[MODULE]/Controllers/Api/V1/[MODEL]Controller.php
 
 class [MODEL]Controller extends Controller
 {
@@ -36,7 +37,7 @@ class [MODEL]Controller extends Controller
         return response()->json([
             'status' => 1,
             'data' => [
-                'items' => \App\Modules\[MODULE]\Resources\[MODEL]Resource::collection($paginator),
+                'items' => [MODEL]Resource::collection($paginator),
                 'pagination' => [
                     'current_page' => $paginator->currentPage(),
                     'per_page' => $paginator->perPage(),
@@ -58,7 +59,7 @@ class [MODEL]Controller extends Controller
 
             return response()->json([
                 'status' => 1,
-                'data' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($model),
+                'data' => new [MODEL]Resource($model),
                 'message' => '[MODEL] fetched successfully',
             ]);
         } catch (ModelNotFoundException $e) {
@@ -73,17 +74,14 @@ class [MODEL]Controller extends Controller
     /**
      * Store a newly created resource.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Store[MODEL]Request $request): JsonResponse
     {
-        $validated = $request->validate([
-[VALIDATION_RULES]
-        ]);
-
-        $model = $this->service->create($validated);
+        $data = [MODEL]Data::from($request->validated());
+        $model = $this->service->create($data);
 
         return response()->json([
             'status' => 1,
-            'data' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($model),
+            'data' => new [MODEL]Resource($model),
             'message' => '[MODEL] created successfully',
         ], 201);
     }
@@ -91,19 +89,24 @@ class [MODEL]Controller extends Controller
     /**
      * Update the specified resource.
      */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(Update[MODEL]Request $request, int $id): JsonResponse
     {
-        $validated = $request->validate([
-[VALIDATION_RULES]
-        ]);
+        try {
+            $data = [MODEL]Data::from($request->validated());
+            $model = $this->service->update($id, $data);
 
-        $updatedModel = $this->service->update($id, $validated);
-
-        return response()->json([
-            'status' => 1,
-            'data' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($updatedModel),
-            'message' => '[MODEL] updated successfully',
-        ]);
+            return response()->json([
+                'status' => 1,
+                'data' => new [MODEL]Resource($model),
+                'message' => '[MODEL] updated successfully',
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 0,
+                'data' => null,
+                'message' => '[MODEL] not found',
+            ], 404);
+        }
     }
 
     /**

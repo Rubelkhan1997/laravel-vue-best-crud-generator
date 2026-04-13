@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\[MODULE]\Data;
+
+use Spatie\LaravelData\Data;
+
+class [MODEL]Data extends Data
+{
+    /**
+     * Create a new data object.
+     */
+    public function __construct(
+[DATA_PROPERTIES]
+    ) {
+    }
+}

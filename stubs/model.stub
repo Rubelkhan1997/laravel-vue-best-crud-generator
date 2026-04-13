@@ -1,37 +1,37 @@
 <?php
 
-namespace App\Modules\[MODULE]\Models;
+declare(strict_types=1);
+
+namespace App\Modules\[MODULE]\Models\[MODEL];
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-// FILE: app/Modules/[MODULE]/Models/[MODEL].php
 
 class [MODEL] extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $table = '[TABLE]';
 
     protected $fillable = [
 [FILLABLE]
-[END_FILLABLE]
     ];
 
-    protected $casts = [
+    /**
+     * Get cast definitions.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
 [CASTS]
-[END_CASTS]
-    ];
-
-    protected $hidden = [
-        // 'deleted_at',
-    ];
+        ];
+    }
 
 [RELATIONSHIPS]
-[END_RELATIONSHIPS]
 
     /**
      * Scope: Search by keyword
@@ -44,35 +44,6 @@ class [MODEL] extends Model
 
         return $query->where(function ($q) use ($search) {
 [SEARCH_COLUMNS]
-[END_SEARCH_COLUMNS]
         });
-    }
-
-    /**
-     * Scope: Filter by status
-     */
-    public function scopeStatus($query, ?string $status = null)
-    {
-        if (!$status) {
-            return $query;
-        }
-
-        return $query->where('status', $status);
-    }
-
-    /**
-     * Scope: Filter by date range
-     */
-    public function scopeDateRange($query, ?string $from = null, ?string $to = null)
-    {
-        if ($from) {
-            $query->whereDate('created_at', '>=', $from);
-        }
-
-        if ($to) {
-            $query->whereDate('created_at', '<=', $to);
-        }
-
-        return $query;
     }
 }
