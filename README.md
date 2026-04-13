@@ -19,6 +19,22 @@ npm install vue @inertiajs/vue3 pinia axios typescript
 
 ## Installation
 
+> **Important:** This package is hosted on GitHub as a VCS repository.
+> Before installing, add the repository to your project's `composer.json`:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Rubelkhan1997/laravel-vue-best-crud-generator"
+        }
+    ]
+}
+```
+
+Then install via Composer:
+
 ```bash
 composer require rubel/laravel-vue-best-crud-generator:@dev
 ```

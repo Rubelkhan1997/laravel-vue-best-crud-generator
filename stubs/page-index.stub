@@ -1,5 +1,5 @@
 <template>
-    <Head :title="t('[feature_plural].title')" />
+    <Head :title="t('navigation.[feature_plural]')" />
 
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center">
@@ -51,6 +51,7 @@
             :empty-subtitle="t('[feature_plural].create_new')"
             :pagination="pagination"
             :per-page="perPage"
+            :per-page-options="[5, 15, 25, 50, 100]"
             :show-pagination="pagination.lastPage > 1"
             :per-page-label="t('[feature_plural].per_page')"
             :page-label="t('[feature_plural].page')"
@@ -69,13 +70,13 @@
 
             <template #actions="{ item }">
                 <Link :href="`[web_route]/${item.id}`" class="text-green-600 hover:text-green-900">
-                    {{ t('actions.view') }}
+                    {{ t('[feature_plural].view') }}
                 </Link>
                 <Link v-if="canEdit" :href="`[web_route]/${item.id}/edit`" class="text-blue-600 hover:text-blue-900">
-                    {{ t('actions.edit') }}
+                    {{ t('[feature_plural].edit') }}
                 </Link>
                 <button v-if="canDelete" @click="handleDelete(item as [MODEL_NAME])" class="text-red-600 hover:text-red-900">
-                    {{ t('actions.delete') }}
+                    {{ t('[feature_plural].delete') }}
                 </button>
             </template>
         </Table>
@@ -132,8 +133,10 @@
 
     const localFilters = reactive<{
         search: string;
+        perPage: number;
     }>({
         search: '',
+        perPage: 15,
     });
 
     let searchTimeout: ReturnType<typeof setTimeout>;
@@ -141,7 +144,7 @@
     function changePerPage(value: number) {
         perPage.value = value;
         setFilters({ perPage: value });
-        fetchAll(1, true);
+        fetchAll(1, true, { perPage: value });
     }
 
     function debouncedSearch() {
@@ -164,8 +167,8 @@
         if (!canDelete.value) return;
 
         const confirmed = await confirm.show({
-            title: t('[feature_plural].delete_title'),
-            message: `${t('[feature_plural].delete_message')} "${item[FIELDS_SHOW_TITLE]}". ${t('[feature_plural].delete_warning')}`,
+            title: t('actions.delete'),
+            message: t('messages.confirm_delete'),
             confirmText: t('actions.delete'),
             cancelText: t('actions.cancel'),
             variant: 'danger',

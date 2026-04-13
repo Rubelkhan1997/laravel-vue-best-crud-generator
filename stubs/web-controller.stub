@@ -32,7 +32,12 @@ class [MODEL]Controller extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('[MODULE]/[FEATURE_NAME]/Create');
+        try {
+            return Inertia::render('[MODULE]/[FEATURE_NAME]/Create');
+        } catch (Throwable $e) {
+            logger()->error('Error loading create form: ' . $e->getMessage());
+            abort(500, 'Failed to load form');
+        }
     }
 
     /**
@@ -48,7 +53,7 @@ class [MODEL]Controller extends Controller
             ]);
         } catch (Throwable $e) {
             logger()->error('Error loading [model_name]: ' . $e->getMessage());
-            abort(404, '[MODEL] not found');
+            abort(500, 'Failed to load [model_name]');
         }
     }
 
@@ -64,8 +69,8 @@ class [MODEL]Controller extends Controller
                 '[model_name]' => new [MODEL]Resource($model),
             ]);
         } catch (Throwable $e) {
-            logger()->error('Error loading [model_name]: ' . $e->getMessage());
-            abort(404, '[MODEL] not found');
+            logger()->error('Error loading edit form: ' . $e->getMessage());
+            abort(500, 'Failed to load form');
         }
     }
 }

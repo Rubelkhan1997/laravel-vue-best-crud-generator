@@ -16,7 +16,7 @@
                         v-if="canEdit"
                         type="button"
                         color="primary"
-                        :name="t('actions.edit')"
+                        :name="t('[feature_plural].edit_[feature_name]')"
                         @click="router.visit(`[web_route]/${[model_name]Data.id}/edit`)"
                     />
                     <FormButton
