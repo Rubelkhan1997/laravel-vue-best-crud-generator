@@ -1,142 +1,94 @@
 <template>
-    <div class="p-6">
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">[MODEL_NAME] Details</h1>
-                <p class="text-sm text-gray-600 mt-1">Viewing [feature_name] information</p>
+    <Head :title="[model_name]Data[FIELDS_SHOW_TITLE]" />
+
+    <div v-if="canView" class="max-w-4xl mx-auto">
+        <section class="space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-semibold text-slate-800">
+                        {{ [model_name]Data[FIELDS_SHOW_TITLE] }}
+                    </h1>
+                    <p class="text-sm text-slate-500 mt-1">{{ t('[feature_plural].[feature_name]_details') }}</p>
+                </div>
+
+                <div class="flex gap-2">
+                    <FormButton
+                        v-if="canEdit"
+                        type="button"
+                        color="primary"
+                        :name="t('actions.edit')"
+                        @click="router.visit(`[web_route]/${[model_name]Data.id}/edit`)"
+                    />
+                    <FormButton
+                        type="button"
+                        color="secondary"
+                        :name="t('actions.back')"
+                        @click="router.visit('[web_route]')"
+                    />
+                </div>
             </div>
-            <div class="flex gap-4">
-                <Link
-                    :href="`[web_route]/${[model_name]?.id}/edit`"
-                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                    <i class="fas fa-edit mr-2"></i>Edit
-                </Link>
-                <Link
-                    :href="'[web_route]'"
-                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                    <i class="fas fa-arrow-left mr-2"></i>Back to List
-                </Link>
-            </div>
-        </div>
 
-        <!-- Loading State -->
-        <div v-if="loading" class="bg-white rounded-lg shadow p-8 text-center">
-            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
-            <p class="text-gray-600">Loading [feature_name] details...</p>
-        </div>
-
-        <!-- Detail Card -->
-        <div v-else-if="[model_name]" class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="p-6 space-y-6">
-                <!-- ID -->
-                <div class="flex border-b border-gray-200 pb-4">
-                    <div class="w-1/3">
-                        <p class="text-sm font-medium text-gray-500">ID</p>
-                    </div>
-                    <div class="w-2/3">
-                        <p class="text-sm text-gray-900">{{ [model_name].id }}</p>
-                    </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+[FIELDS_SHOW]
                 </div>
 
-                <!-- Name -->
-                <div class="flex border-b border-gray-200 pb-4">
-                    <div class="w-1/3">
-                        <p class="text-sm font-medium text-gray-500">Name</p>
-                    </div>
-                    <div class="w-2/3">
-                        <p class="text-sm text-gray-900">{{ [model_name].name || 'N/A' }}</p>
-                    </div>
-                </div>
-
-                <!-- Code -->
-                <div class="flex border-b border-gray-200 pb-4">
-                    <div class="w-1/3">
-                        <p class="text-sm font-medium text-gray-500">Code</p>
-                    </div>
-                    <div class="w-2/3">
-                        <p class="text-sm text-gray-900">{{ [model_name].code || 'N/A' }}</p>
-                    </div>
-                </div>
-
-                <!-- Email -->
-                <div class="flex border-b border-gray-200 pb-4">
-                    <div class="w-1/3">
-                        <p class="text-sm font-medium text-gray-500">Email</p>
-                    </div>
-                    <div class="w-2/3">
-                        <p class="text-sm text-gray-900">{{ [model_name].email || 'N/A' }}</p>
-                    </div>
-                </div>
-
-                <!-- Created At -->
-                <div class="flex border-b border-gray-200 pb-4">
-                    <div class="w-1/3">
-                        <p class="text-sm font-medium text-gray-500">Created At</p>
-                    </div>
-                    <div class="w-2/3">
-                        <p class="text-sm text-gray-900">{{ formatDate([model_name].createdAt) }}</p>
-                    </div>
-                </div>
-
-                <!-- Updated At -->
-                <div class="flex">
-                    <div class="w-1/3">
-                        <p class="text-sm font-medium text-gray-500">Updated At</p>
-                    </div>
-                    <div class="w-2/3">
-                        <p class="text-sm text-gray-900">{{ formatDate([model_name].updatedAt) }}</p>
+                <div class="mt-6 pt-6 border-t border-slate-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-slate-500">{{ t('[feature_plural].created_at') }}:</span>
+                            <span class="ml-2 text-slate-900">{{ [model_name]Data.createdAt ? formatDate([model_name]Data.createdAt) : t('na') }}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500">{{ t('[feature_plural].updated_at') }}:</span>
+                            <span class="ml-2 text-slate-900">{{ [model_name]Data.updatedAt ? formatDate([model_name]Data.updatedAt) : t('na') }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+    </div>
 
-        <!-- Not Found -->
-        <div v-else class="bg-white rounded-lg shadow p-8 text-center">
-            <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
-            <p class="text-gray-600">[MODEL_NAME] not found</p>
+    <div v-else class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <h1 class="text-xl font-semibold text-slate-800">{{ t('messages.access_denied') }}</h1>
+            <p class="text-sm text-slate-500 mt-2">{{ t('messages.no_permission') }}</p>
+            <FormButton
+                type="button"
+                color="secondary"
+                :name="t('actions.back')"
+                button-class="mt-4"
+                @click="router.visit('[web_route]')"
+            />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
-import { use[MODEL_NAME]s } from '@/Composables/[MODULE_NAME]/use[MODEL_NAME]s';
+    import { computed, onMounted } from 'vue';
+    import { router } from '@inertiajs/vue3';
+    import { formatDate } from '@/Utils/date';
+    import type { [MODEL_NAME] } from '@/Types/[MODULE_NAME]/[model_name]';
+    import { mapTo[MODEL_NAME] } from '@/Utils/Mappers/[model_name]';
+    import { useI18n } from '@/Composables/useI18n';
+    import { usePermissionService } from '@/Composables/usePermissionService';
 
-// FILE: resources/js/Pages/[MODULE_NAME]/[FEATURE_NAME]/Show.vue
+    const { t } = useI18n();
 
-interface Props {
-    [model_name]: {
-        data: Record<string, any>;
-    };
-}
+    const permission = usePermissionService();
+    const canView = computed(() => permission.check('view [feature_plural]'));
+    const canEdit = computed(() => permission.check('edit [feature_plural]'));
 
-const props = defineProps<Props>();
-
-const { fetchById, [model_name]: item, loading } = use[MODEL_NAME]s();
-
-const [model_name] = computed(() => item.value || props.[model_name]?.data || null);
-
-function formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-}
-
-onMounted(() => {
-    if (!props.[model_name]?.data) {
-        const page = usePage();
-        const id = page.props.route?.params?.id;
-        if (id) {
-            fetchById(Number(id));
+    onMounted(() => {
+        if (!canView.value) {
+            router.visit('[web_route]');
+            return;
         }
-    }
-});
+    });
+
+    const props = defineProps<{
+        [model_name]: Record<string, any>;
+    }>();
+
+    const [model_name]Data: [MODEL_NAME] = mapTo[MODEL_NAME](props.[model_name]);
 </script>

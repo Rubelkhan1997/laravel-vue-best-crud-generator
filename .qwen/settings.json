@@ -6,7 +6,8 @@
       "Bash(rmdir *)",
       "Bash(dir *)",
       "Bash(findstr *)",
-      "Bash(move *)"
+      "Bash(move *)",
+      "Bash(php *)"
     ]
   },
   "$version": 3

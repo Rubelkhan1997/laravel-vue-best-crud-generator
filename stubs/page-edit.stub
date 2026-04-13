@@ -1,159 +1,146 @@
 <template>
-    <div class="p-6">
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Edit [MODEL_NAME]</h1>
-                <p class="text-sm text-gray-600 mt-1">Update [feature_name] information</p>
+    <Head :title="t('[feature_plural].edit_[feature_name]')" />
+
+    <div v-if="canEdit" class="max-w-4xl mx-auto">
+        <section class="space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-semibold text-slate-800">{{ t('[feature_plural].edit_[feature_name]') }}</h1>
+                    <p class="text-sm text-slate-500 mt-1">{{ t('[feature_plural].update_hint') }}</p>
+                </div>
+
+                <Link
+                    href="[web_route]"
+                    class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition"
+                >
+                    {{ t('[feature_plural].back_to_[feature_plural]') }}
+                </Link>
             </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <form @submit.prevent="submit" class="space-y-6">
+[FIELDS_FORM]
+                    <div class="flex gap-4 pt-4">
+                        <FormButton
+                            type="submit"
+                            color="primary"
+                            :name="submitLabel"
+                            :disabled="isSaving"
+                            button-class="px-6"
+                        />
+
+                        <Link
+                            href="[web_route]"
+                            class="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition"
+                        >
+                            {{ t('actions.cancel') }}
+                        </Link>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div v-else class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <h1 class="text-xl font-semibold text-slate-800">{{ t('messages.access_denied') }}</h1>
+            <p class="text-sm text-slate-500 mt-2">{{ t('messages.no_permission') }}</p>
             <Link
-                :href="'[web_route]'"
-                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                href="[web_route]"
+                class="inline-flex mt-4 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition"
             >
-                <i class="fas fa-arrow-left mr-2"></i>Back to List
+                {{ t('actions.back') }}
             </Link>
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="loading" class="bg-white rounded-lg shadow p-8 text-center">
-            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
-            <p class="text-gray-600">Loading [feature_name] details...</p>
-        </div>
-
-        <!-- Error Alert -->
-        <div v-else-if="form.hasErrors()" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <ul class="list-disc list-inside text-red-800">
-                <li v-for="(error, index) in form.errors" :key="index">{{ error }}</li>
-            </ul>
-        </div>
-
-        <!-- Form -->
-        <div v-else class="bg-white rounded-lg shadow p-6">
-            <form @submit.prevent="submit" class="space-y-6">
-                <!-- Name -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Name <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                        v-model="form.name"
-                        type="text"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        :class="{ 'border-red-500': form.errors.name }"
-                        placeholder="Enter name"
-                    />
-                    <p v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{ form.errors.name }}</p>
-                </div>
-
-                <!-- Code -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Code <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                        v-model="form.code"
-                        type="text"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        :class="{ 'border-red-500': form.errors.code }"
-                        placeholder="Enter code"
-                    />
-                    <p v-if="form.errors.code" class="text-red-500 text-sm mt-1">{{ form.errors.code }}</p>
-                </div>
-
-                <!-- Email -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Email
-                    </label>
-                    <input
-                        v-model="form.email"
-                        type="email"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        :class="{ 'border-red-500': form.errors.email }"
-                        placeholder="Enter email"
-                    />
-                    <p v-if="form.errors.email" class="text-red-500 text-sm mt-1">{{ form.errors.email }}</p>
-                </div>
-
-                <!-- Form Actions -->
-                <div class="flex justify-end gap-4 pt-4">
-                    <Link
-                        :href="'[web_route]'"
-                        class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                    >
-                        Cancel
-                    </Link>
-                    <button
-                        type="submit"
-                        :disabled="form.processing"
-                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                    >
-                        <i v-if="form.processing" class="fas fa-spinner fa-spin mr-2"></i>
-                        {{ form.processing ? 'Updating...' : 'Update [MODEL_NAME]' }}
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
-import { useForm, usePage } from '@inertiajs/vue3';
-import { use[MODEL_NAME]s } from '@/Composables/[MODULE_NAME]/use[MODEL_NAME]s';
+    import { computed, onMounted } from 'vue';
+    import { useForm, router } from '@inertiajs/vue3';
+    import { use[MODEL_NAME]s } from '@/Composables/[MODULE_NAME]/use[MODEL_NAME]s';
+    import { useI18n } from '@/Composables/useI18n';
+    import { usePermissionService } from '@/Composables/usePermissionService';
+    import { required, validateInertiaForm } from '@/Utils/validation';
+    import type { [MODEL_NAME], Update[MODEL_NAME]Dto } from '@/Types/[MODULE_NAME]/[model_name]';
+    import { mapTo[MODEL_NAME] } from '@/Utils/Mappers/[model_name]';
 
-// FILE: resources/js/Pages/[MODULE_NAME]/[FEATURE_NAME]/Edit.vue
+    const { t } = useI18n();
 
-interface Props {
-    [model_name]: {
-        data: {
-            id: number;
-            name: string;
-            code: string;
-            email?: string | null;
-        };
-    };
-}
+    const permission = usePermissionService();
+    const canEdit = computed(() => permission.check('edit [feature_plural]'));
 
-const props = defineProps<Props>();
+    const { update: update[MODEL_NAME], saving } = use[MODEL_NAME]s();
 
-const { update, loading } = use[MODEL_NAME]s();
+    onMounted(() => {
+        if (!canEdit.value) {
+            router.visit('[web_route]');
+            return;
+        }
+    });
 
-const form = useForm({
-    name: '',
-    code: '',
-    email: '',
-});
+    const props = defineProps<{
+        [model_name]: Record<string, any>;
+    }>();
 
-onMounted(() => {
-    if (props.[model_name]?.data) {
-        form.name = props.[model_name].data.name;
-        form.code = props.[model_name].data.code;
-        form.email = props.[model_name].data.email || '';
+    const [model_name]Data: [MODEL_NAME] = mapTo[MODEL_NAME](props.[model_name]);
+
+    const form = useForm<Update[MODEL_NAME]Dto>({
+[FIELDS_FORM_DATA_EDIT]
+    });
+
+    const isSaving = computed(() => form.processing || saving.value);
+    const submitLabel = computed(() => isSaving.value ? t('actions.updating') : t('actions.update'));
+
+    async function submit(): Promise<void> {
+        form.clearErrors();
+
+        if (!validateForm()) {
+            scrollToFirstError();
+            return;
+        }
+
+        try {
+            const result = await update[MODEL_NAME](Number([model_name]Data.id), {
+[FIELDS_PAYLOAD_EDIT]
+            } as Update[MODEL_NAME]Dto);
+
+            if (Number(result.status) === 1) {
+                form.reset();
+                router.visit('[web_route]');
+            }
+        } catch (err: unknown) {
+            const apiErr = err as Record<string, any>;
+
+            if (apiErr?.response?.data?.errors) {
+                const backendErrors: Record<string, string[]> = apiErr.response.data.errors;
+                Object.entries(backendErrors).forEach(([key, messages]) => {
+                    const mappedKey = mapBackendField(key);
+                    form.setError(mappedKey as any, messages[0]);
+                });
+                scrollToFirstError();
+            }
+        }
     }
-});
 
-async function submit(): Promise<void> {
-    try {
-        const id = props.[model_name].data.id;
-        const result = await update(id, {
-            name: form.name,
-            code: form.code,
-            email: form.email || undefined,
+    function validateForm(): boolean {
+        return validateInertiaForm(form, {
+[VALIDATION_RULES_FORM]
         });
-
-        if (Number(result.status) === 1) {
-            router.visit('/[web_route]');
-        }
-    } catch (err: unknown) {
-        const apiErr = err as Record<string, any>;
-        if (apiErr?.response?.data?.errors) {
-            const backendErrors: Record<string, string[]> = apiErr.response.data.errors;
-            Object.entries(backendErrors).forEach(([key, messages]) => {
-                form.setError(key as keyof typeof form.errors, messages[0]);
-            });
-        }
     }
-}
+
+    function mapBackendField(field: string): string {
+        const map: Record<string, string> = {
+[FIELDS_BACKEND_MAP]
+        };
+
+        return map[field] ?? field;
+    }
+
+    function scrollToFirstError(): void {
+        setTimeout(() => {
+            const firstError = document.querySelector('.border-red-500');
+            firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
 </script>

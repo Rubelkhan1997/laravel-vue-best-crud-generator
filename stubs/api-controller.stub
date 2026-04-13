@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Modules\[MODULE]\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Modules\[MODULE]\Models\[MODEL];
 use App\Modules\[MODULE]\Services\[MODEL]Service;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -12,14 +15,21 @@ use Illuminate\Http\Request;
 
 class [MODEL]Controller extends Controller
 {
-    public function __construct(
-        private readonly [MODEL]Service $service
-    ) {}
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(private readonly [MODEL]Service $service)
+    {
+    }
 
+    /**
+     * Display a paginated listing.
+     */
     public function index(Request $request): JsonResponse
     {
-        $paginator = $this->service->index(
+        $paginator = $this->service->paginate(
             filters: $request->only(['search', 'status']),
+            page: (int) $request->get('page', 1),
             perPage: (int) $request->get('per_page', 15)
         );
 
@@ -38,32 +48,20 @@ class [MODEL]Controller extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-[VALIDATION_RULES]
-        ]);
-
-        $model = $this->service->store($validated);
-
-        return response()->json([
-            'status' => 1,
-            'data' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($model),
-            'message' => '[MODEL] created successfully',
-        ], 201);
-    }
-
+    /**
+     * Display the specified resource.
+     */
     public function show(int $id): JsonResponse
     {
         try {
-            $model = $this->service->show($id);
+            $model = $this->service->find($id);
 
             return response()->json([
                 'status' => 1,
                 'data' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($model),
                 'message' => '[MODEL] fetched successfully',
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => 0,
                 'data' => null,
@@ -72,14 +70,34 @@ class [MODEL]Controller extends Controller
         }
     }
 
+    /**
+     * Store a newly created resource.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+[VALIDATION_RULES]
+        ]);
+
+        $model = $this->service->create($validated);
+
+        return response()->json([
+            'status' => 1,
+            'data' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($model),
+            'message' => '[MODEL] created successfully',
+        ], 201);
+    }
+
+    /**
+     * Update the specified resource.
+     */
     public function update(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
 [VALIDATION_RULES]
         ]);
 
-        $model = $this->service->show($id);
-        $updatedModel = $this->service->update($model, $validated);
+        $updatedModel = $this->service->update($id, $validated);
 
         return response()->json([
             'status' => 1,
@@ -88,18 +106,20 @@ class [MODEL]Controller extends Controller
         ]);
     }
 
+    /**
+     * Remove the specified resource.
+     */
     public function destroy(int $id): JsonResponse
     {
         try {
-            $model = $this->service->show($id);
-            $this->service->destroy($model);
+            $this->service->delete($id);
 
             return response()->json([
                 'status' => 1,
                 'data' => null,
                 'message' => '[MODEL] deleted successfully',
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => 0,
                 'data' => null,

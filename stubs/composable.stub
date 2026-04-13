@@ -3,7 +3,6 @@ import { use[MODEL_NAME]sStore } from '@/Stores/[MODULE_NAME]/[model_name]Store'
 import { useLoading, usePolling } from '@/Composables';
 import { getApiError } from '@/Helpers/error';
 import type { ApiResponse } from '@/Types/api';
-import { get } from 'lodash';
 import type { toast as ToastType } from '@/Plugins/toast';
 import type {
     [MODEL_NAME],
@@ -64,6 +63,7 @@ export function use[MODEL_NAME]s(options: Use[MODEL_NAME]sOptions = {}) {
 
     async function fetchById(id: number): Promise<void> {
         startLoading();
+
         try {
             await store.fetchById(id);
         } catch (err: unknown) {
@@ -76,6 +76,7 @@ export function use[MODEL_NAME]s(options: Use[MODEL_NAME]sOptions = {}) {
 
     async function create(payload: Create[MODEL_NAME]Dto): Promise<ApiResponse<[MODEL_NAME]>> {
         startSaving();
+
         try {
             const result = await store.create(payload);
             const isSuccess = Number(result.status) === 1;
@@ -97,6 +98,7 @@ export function use[MODEL_NAME]s(options: Use[MODEL_NAME]sOptions = {}) {
 
     async function update(id: number, payload: Update[MODEL_NAME]Dto): Promise<ApiResponse<[MODEL_NAME]>> {
         startSaving();
+
         try {
             const result = await store.update(id, payload);
             const isSuccess = Number(result.status) === 1;
@@ -118,6 +120,7 @@ export function use[MODEL_NAME]s(options: Use[MODEL_NAME]sOptions = {}) {
 
     async function delete[MODEL_NAME](id: number): Promise<ApiResponse<void>> {
         startSaving();
+
         try {
             const result = await store.delete(id);
             const isSuccess = Number(result.status) === 1;
@@ -150,6 +153,7 @@ export function use[MODEL_NAME]s(options: Use[MODEL_NAME]sOptions = {}) {
             if (Object.keys(initialFilters).length > 0) {
                 store.setFilters(initialFilters);
             }
+
             fetchAll();
             startPolling();
         });

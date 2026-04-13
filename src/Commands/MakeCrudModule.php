@@ -553,6 +553,20 @@ class MakeCrudModule extends Command
             '[END_CASTS]',
             '[END_RELATIONSHIPS]',
             '[END_SEARCH_COLUMNS]',
+            '[FIELDS_FORM]',
+            '[FIELDS_FORM_DATA]',
+            '[FIELDS_FORM_DATA_EDIT]',
+            '[VALIDATION_RULES_FORM]',
+            '[TYPE_FIELDS]',
+            '[CREATE_DTO_FIELDS]',
+            '[UPDATE_DTO_FIELDS]',
+            '[FIELDS_PAYLOAD_CREATE]',
+            '[FIELDS_PAYLOAD_EDIT]',
+            '[FIELDS_BACKEND_MAP]',
+            '[FIELDS_HEADERS]',
+            '[FIELDS_COLUMNS]',
+            '[FIELDS_SHOW]',
+            '[FIELDS_SHOW_TITLE]',
         ];
 
         $replace = [
@@ -582,6 +596,20 @@ class MakeCrudModule extends Command
             '',
             '',
             '',
+            $this->getFieldsForm(),
+            $this->getFieldsFormData(),
+            $this->getFieldsFormDataEdit(),
+            $this->getValidationRulesForm(),
+            $this->getTypeFields(),
+            $this->getCreateDtoFields(),
+            $this->getUpdateDtoFields(),
+            $this->getFieldsPayloadCreate(),
+            $this->getFieldsPayloadEdit(),
+            $this->getFieldsBackendMap(),
+            $this->getFieldsHeaders(),
+            $this->getFieldsColumns(),
+            $this->getFieldsShow(),
+            $this->getFieldsShowTitle(),
         ];
 
         return str_replace($search, $replace, $content);
@@ -647,8 +675,226 @@ class MakeCrudModule extends Command
     {
         return collect($this->fields)
             ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']))
-            ->map(fn($f) => "        {$f['name']}: api.{$f['name']},")
+            ->map(fn($f) => "        {$f['name']}: source.{$f['name']},")
             ->implode("\n");
+    }
+
+    /**
+     * Generate TypeScript type fields with proper optional markers.
+     * Used in types.stub for [MODEL_NAME] interface.
+     */
+    protected function getTypeFields(): string
+    {
+        return collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']))
+            ->map(function ($f) {
+                $tsType = $this->getTypeScriptType($f['type']);
+                $optional = in_array($f['type'], ['bool', 'boolean', 'decimal', 'float', 'double']) || $f['nullable'] ? '?' : '';
+
+                return "    {$f['name']}{$optional}: {$tsType};";
+            })
+            ->implode("\n");
+    }
+
+    /**
+     * Generate Create DTO fields (required fields required, nullable optional).
+     */
+    protected function getCreateDtoFields(): string
+    {
+        return collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']))
+            ->map(function ($f) {
+                $tsType = $this->getTypeScriptType($f['type']);
+                $optional = $f['nullable'] ? '?' : '';
+
+                return "    {$f['name']}{$optional}: {$tsType};";
+            })
+            ->implode("\n");
+    }
+
+    /**
+     * Generate Update DTO fields (all optional).
+     */
+    protected function getUpdateDtoFields(): string
+    {
+        return collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']))
+            ->map(function ($f) {
+                $tsType = $this->getTypeScriptType($f['type']);
+
+                return "    {$f['name']}?: {$tsType};";
+            })
+            ->implode("\n");
+    }
+
+    /**
+     * Map database type to TypeScript type.
+     */
+    protected function getTypeScriptType(string $dbType): string
+    {
+        return match ($dbType) {
+            'int', 'integer', 'bigint', 'tinyint', 'smallint', 'mediumint' => 'number',
+            'bool', 'boolean' => 'boolean',
+            'decimal', 'float', 'double' => 'number',
+            'json' => 'Record<string, any>',
+            default => 'string',
+        };
+    }
+
+    /**
+     * Generate typed payload for create page.
+     * Sends undefined for empty optional fields.
+     */
+    protected function getFieldsPayloadCreate(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+
+            if ($f['required']) {
+                return "                {$fieldName}: form.{$fieldName},";
+            }
+
+            return "                {$fieldName}: form.{$fieldName} || undefined,";
+        })->implode("\n");
+    }
+
+    /**
+     * Generate typed payload for edit page.
+     * Sends undefined for empty optional fields.
+     */
+    protected function getFieldsPayloadEdit(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+
+            if ($f['required']) {
+                return "                {$fieldName}: form.{$fieldName},";
+            }
+
+            return "                {$fieldName}: form.{$fieldName} || undefined,";
+        })->implode("\n");
+    }
+
+    /**
+     * Generate backend field mapping for error key conversion.
+     * Maps snake_case backend keys to camelCase frontend form keys.
+     */
+    protected function getFieldsBackendMap(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+
+            return "            {$fieldName}: '{$fieldName}',";
+        })->implode("\n");
+    }
+
+    /**
+     * Generate table header definitions for index page.
+     */
+    protected function getFieldsHeaders(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at', 'password']))
+            ->take(5);
+
+        if ($userFields->isEmpty()) {
+            return "        { key: 'id', label: 'ID' },\n        { key: 'actions', label: t('[feature_plural].actions'), align: 'right' as const },";
+        }
+
+        $headers = $userFields->map(function ($f) {
+            $label = $f['name'];
+
+            return "        { key: '{$f['name']}', label: t('[feature_plural].{$label}') },";
+        })->implode("\n");
+
+        return "{$headers}\n        { key: 'actions', label: t('[feature_plural].actions'), align: 'right' as const },";
+    }
+
+    /**
+     * Generate table column definitions for index page.
+     */
+    protected function getFieldsColumns(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at', 'password']))
+            ->take(5);
+
+        if ($userFields->isEmpty()) {
+            return "        { key: 'id', className: 'font-medium text-slate-900' },";
+        }
+
+        return $userFields->map(function ($f, $index) {
+            $className = $index === 0 ? "        { key: '{$f['name']}', className: 'font-medium text-slate-900' }," : "        { key: '{$f['name']}', fallback: t('na') },";
+
+            return $className;
+        })->implode("\n");
+    }
+
+    /**
+     * Generate detail field markup for show page.
+     */
+    protected function getFieldsShow(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at', 'password']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        // Group into pairs for 2-column grid
+        $fieldGroups = $userFields->chunk(2);
+
+        return $fieldGroups->map(function ($group) {
+            return $group->map(function ($f) {
+                $fieldName = $f['name'];
+                $labelKey = "[feature_plural].{$fieldName}";
+
+                return <<<VUE
+                    <div>
+                        <label class="block text-sm font-medium text-slate-500 mb-1">{{ t('{$labelKey}') }}</label>
+                        <p class="text-slate-900">{{ [model_name]Data.{$fieldName} || t('na') }}</p>
+                    </div>
+                VUE;
+            })->implode("\n\n");
+        })->implode("\n\n");
+    }
+
+    /**
+     * Generate the property accessor for page title in show view.
+     * Uses the first string/text field as the display name.
+     */
+    protected function getFieldsShowTitle(): string
+    {
+        $titleField = collect($this->fields)
+            ->first(fn($f) => in_array($f['type'], ['string', 'text']) && !in_array($f['name'], ['id', 'password']));
+
+        if (!$titleField) {
+            return '.id';
+        }
+
+        return ".{$titleField['name']}";
     }
 
     protected function getValidationRules(): string
@@ -690,13 +936,332 @@ class MakeCrudModule extends Command
                     'decimal' => "decimal",
                     default => "string",
                 };
-                
+
                 $nullable = $f['nullable'] ? '->nullable()' : '';
                 $unique = $f['unique'] ? '->unique()' : '';
-                
+
                 return "            \$table->{$type}('{$f['name']}'){$nullable}{$unique};";
             })
             ->implode("\n");
+    }
+
+    /**
+     * Generate Vue form field markup for [FIELDS_FORM] placeholder.
+     *
+     * Produces form input components (FormInput, FormTextarea, FormSelect, etc.)
+     * matching the actual resources/js/Components/Form/ conventions.
+     * Fields are wrapped in grid layout: grid grid-cols-1 md:grid-cols-2 gap-6.
+     */
+    protected function getFieldsForm(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        // Group fields into rows of 2 for the grid
+        $fieldGroups = $userFields->chunk(2);
+
+        $htmlBlocks = [];
+
+        foreach ($fieldGroups as $group) {
+            $fieldsHtml = $group->map(function ($f) {
+                $label = Str::headline($f['name']);
+                $fieldName = $f['name'];
+                $errorKey = $fieldName;
+                $vueType = $this->getVueFieldType($f['type']);
+                $requiredAttr = $f['required'] ? ':required="true"' : '';
+
+                return match ($vueType) {
+                    'textarea' => <<<VUE
+                        <FormTextarea
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :placeholder="t('[feature_plural].{$fieldName}_placeholder')"
+                            :rows="3"
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+                    VUE,
+
+                    'email' => <<<VUE
+                        <FormInput
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            type="email"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :placeholder="t('[feature_plural].{$fieldName}_placeholder')"
+                            {$requiredAttr}
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+                    VUE,
+
+                    'number' => <<<VUE
+                        <FormInput
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            type="number"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :placeholder="t('[feature_plural].{$fieldName}_placeholder')"
+                            {$requiredAttr}
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+                    VUE,
+
+                    'password' => <<<VUE
+                        <FormInput
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            type="password"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :placeholder="t('[feature_plural].{$fieldName}_placeholder')"
+                            {$requiredAttr}
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+                    VUE,
+
+                    'date' => <<<VUE
+                        <FormInput
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            type="date"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :placeholder="t('[feature_plural].{$fieldName}_placeholder')"
+                            {$requiredAttr}
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+                    VUE,
+
+                    'time' => <<<VUE
+                        <FormInput
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            type="time"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :placeholder="t('[feature_plural].{$fieldName}_placeholder')"
+                            {$requiredAttr}
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+                    VUE,
+
+                    'checkbox' => <<<VUE
+                        <FormInput
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            type="checkbox"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            {$requiredAttr}
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+                    VUE,
+
+                    'select' => $this->generateSelectField($fieldName, $label, $errorKey, $f),
+
+                    default => <<<VUE
+                        <FormInput
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :placeholder="t('[feature_plural].{$fieldName}_placeholder')"
+                            {$requiredAttr}
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+                    VUE,
+                };
+            })->implode("\n\n");
+
+            $htmlBlocks[] = "                    <div class=\"grid grid-cols-1 md:grid-cols-2 gap-6\">\n{$fieldsHtml}\n                    </div>";
+        }
+
+        return implode("\n\n", $htmlBlocks);
+    }
+
+    /**
+     * Generate initial form data for create page [FIELDS_FORM_DATA].
+     */
+    protected function getFieldsFormData(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+            $defaultValue = $this->getFormDefaultValue($f['type']);
+
+            return "        {$fieldName}: {$defaultValue},";
+        })->implode("\n");
+    }
+
+    /**
+     * Generate initial form data for edit page [FIELDS_FORM_DATA_EDIT].
+     *
+     * Binds each field to the existing record's data via [model_name]Data.
+     */
+    protected function getFieldsFormDataEdit(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+
+            return "        {$fieldName}: [model_name]Data.{$fieldName},";
+        })->implode("\n");
+    }
+
+    /**
+     * Generate client-side validation rules mapping for [VALIDATION_RULES_FORM].
+     *
+     * Uses array format matching validateInertiaForm() convention:
+     *   name: [required],
+     *   email: [nullable, email],
+     */
+    protected function getValidationRulesForm(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+            $rules = [];
+
+            if ($f['required']) {
+                $rules[] = 'required';
+            } else {
+                $rules[] = 'nullable';
+            }
+
+            $typeRules = $this->getClientTypeRules($f['type']);
+            $rules = array_merge($rules, $typeRules);
+
+            $rulesStr = implode(', ', $rules);
+
+            return "            {$fieldName}: [{$rulesStr}],";
+        })->implode("\n");
+    }
+
+    /**
+     * Map database field type to Vue input type.
+     */
+    protected function getVueFieldType(string $dbType): string
+    {
+        return match ($dbType) {
+            'text', 'longtext', 'mediumtext' => 'textarea',
+            'email' => 'email',
+            'int', 'integer', 'bigint', 'tinyint', 'smallint', 'mediumint', 'decimal', 'float', 'double' => 'number',
+            'bool', 'boolean' => 'checkbox',
+            'date' => 'date',
+            'time' => 'time',
+            'datetime', 'timestamp' => 'date',
+            'password', 'secret' => 'password',
+            default => 'text',
+        };
+    }
+
+    /**
+     * Get default value for form data based on field type.
+     */
+    protected function getFormDefaultValue(string $dbType): string
+    {
+        return match ($this->getVueFieldType($dbType)) {
+            'checkbox' => 'false',
+            'number' => 'null',
+            default => "''",
+        };
+    }
+
+    /**
+     * Get client-side validation rules for a field type.
+     */
+    protected function getClientTypeRules(string $dbType): array
+    {
+        return match ($this->getVueFieldType($dbType)) {
+            'email' => ['email'],
+            'number' => ['numeric'],
+            default => [],
+        };
+    }
+
+    /**
+     * Generate a select/dropdown field with options.
+     */
+    protected function generateSelectField(string $fieldName, string $label, string $errorKey, array $field): string
+    {
+        // Check if this field is associated with an enum
+        $enum = collect($this->enums)->first(fn($e) => $e['field'] === $fieldName);
+
+        if ($enum) {
+            $options = collect($enum['values'])
+                ->map(fn($val) => "{ label: t('enums.{$enum['name']}.{$val}'), value: '{$val}' }")
+                ->implode(",\n                            ");
+
+            return <<<VUE
+                        <FormSelect
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :options="[
+                            {$options}
+                            ]"
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+            VUE;
+        }
+
+        // Check if this is a relationship field
+        $relationship = collect($this->relationships)->first(fn($r) => $r['method'] === $fieldName || $r['model'] === Str::studly($fieldName));
+
+        if ($relationship) {
+            $relatedModelPlural = strtolower(Str::plural($relationship['model']));
+
+            return <<<VUE
+                        <FormSelect
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :options="{$relatedModelPlural}"
+                            option-label="name"
+                            option-value="id"
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+            VUE;
+        }
+
+        // Generic select fallback
+        return <<<VUE
+                        <FormSelect
+                            id="{$fieldName}"
+                            v-model="form.{$fieldName}"
+                            :label="t('[feature_plural].{$fieldName}')"
+                            :options="[]"
+                            :error="form.errors.{$errorKey}"
+                            wrapper-class="mb-0"
+                        />
+        VUE;
     }
 
     protected function getApiRouteSnippet(): string

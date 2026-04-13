@@ -70,7 +70,7 @@ export const use[MODEL_NAME]sStore = defineStore('[feature_name]s', {
             this.loadingList = true;
             this.error = null;
             try {
-                const { data } = await apiClient.v1.get('/[api_route]/[feature_plural]', {
+                const { data } = await apiClient.v1.get('/[api_route]', {
                     params: {
                         ...mapTo[MODEL_NAME]FiltersApi(this.filters),
                         page,
@@ -84,11 +84,11 @@ export const use[MODEL_NAME]sStore = defineStore('[feature_name]s', {
                     : Array.isArray(payload.data)
                         ? payload.data
                         : [];
-                const pagination = payload.pagination ?? payload.meta ?? {};
+                const paginationMeta = payload.pagination ?? payload.meta ?? {};
 
                 this.[feature_plural] = normalize[MODEL_NAME]s(items).map(mapTo[MODEL_NAME]);
                 this.pagination.meta = {
-                    ...mapTo[MODEL_NAME]Pagination(pagination),
+                    ...mapTo[MODEL_NAME]Pagination(paginationMeta),
                     currentPage: page,
                 };
                 this.pagination.data = this.[feature_plural];
@@ -104,7 +104,7 @@ export const use[MODEL_NAME]sStore = defineStore('[feature_name]s', {
             this.loadingDetail = true;
             this.error = null;
             try {
-                const { data } = await apiClient.v1.get(`/[api_route]/[feature_plural]/${id}`);
+                const { data } = await apiClient.v1.get(`/[api_route]/${id}`);
                 this.selected[MODEL_NAME] = data.data
                     ? mapTo[MODEL_NAME](data.data)
                     : null;
@@ -121,7 +121,7 @@ export const use[MODEL_NAME]sStore = defineStore('[feature_name]s', {
             this.error = null;
             try {
                 const { data } = await apiClient.v1.post(
-                    '/[api_route]/[feature_plural]',
+                    '/[api_route]',
                     mapCreate[MODEL_NAME]ToApi(payload)
                 );
                 const response = data as ApiResponse<Record<string, any>>;
@@ -147,7 +147,7 @@ export const use[MODEL_NAME]sStore = defineStore('[feature_name]s', {
             this.error = null;
             try {
                 const { data } = await apiClient.v1.put(
-                    `/[api_route]/[feature_plural]/${id}`,
+                    `/[api_route]/${id}`,
                     mapUpdate[MODEL_NAME]ToApi(payload)
                 );
                 const response = data as ApiResponse<Record<string, any>>;
@@ -172,7 +172,7 @@ export const use[MODEL_NAME]sStore = defineStore('[feature_name]s', {
             this.loading = true;
             this.error = null;
             try {
-                const { data } = await apiClient.v1.delete(`/[api_route]/[feature_plural]/${id}`);
+                const { data } = await apiClient.v1.delete(`/[api_route]/${id}`);
                 const response = data as ApiResponse<void>;
 
                 if (Number(response.status) === 1) {

@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Modules\[MODULE]\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Modules\[MODULE]\Resources\[MODEL]Resource;
 use App\Modules\[MODULE]\Services\[MODEL]Service;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,26 +16,37 @@ use Throwable;
 
 class [MODEL]Controller extends Controller
 {
-    public function __construct(
-        private readonly [MODEL]Service $service
-    ) {}
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(private readonly [MODEL]Service $service) {}
 
-    public function index(): Response
+    /**
+     * Display a listing page.
+     */
+    public function index(Request $request): Response
     {
         return Inertia::render('[MODULE]/[FEATURE_NAME]/Index');
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create(): Response
     {
         return Inertia::render('[MODULE]/[FEATURE_NAME]/Create');
     }
 
+    /**
+     * Display the specified resource.
+     */
     public function show(int $id): Response
     {
         try {
-            $model = $this->service->show($id);
+            $model = $this->service->find($id);
+
             return Inertia::render('[MODULE]/[FEATURE_NAME]/Show', [
-                '[model_name]' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($model),
+                '[model_name]' => new [MODEL]Resource($model),
             ]);
         } catch (Throwable $e) {
             logger()->error('Error loading [model_name]: ' . $e->getMessage());
@@ -40,12 +54,16 @@ class [MODEL]Controller extends Controller
         }
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(int $id): Response
     {
         try {
-            $model = $this->service->show($id);
+            $model = $this->service->find($id);
+
             return Inertia::render('[MODULE]/[FEATURE_NAME]/Edit', [
-                '[model_name]' => new \App\Modules\[MODULE]\Resources\[MODEL]Resource($model),
+                '[model_name]' => new [MODEL]Resource($model),
             ]);
         } catch (Throwable $e) {
             logger()->error('Error loading [model_name]: ' . $e->getMessage());

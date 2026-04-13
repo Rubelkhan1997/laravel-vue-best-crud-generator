@@ -1,73 +1,74 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Modules\[MODULE]\Services;
 
 use App\Modules\[MODULE]\Models\[MODEL];
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-// FILE: app/Modules/[MODULE]/Services/[SERVICE].php
+// FILE: app/Modules/[MODULE]/Services/[MODEL]Service.php
 
-class [SERVICE]
+readonly class [MODEL]Service
 {
     /**
-     * Get paginated list with filters
+     * Return a paginated list with filters.
      */
-    public function index(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function paginate(array $filters = [], int $page = 1, int $perPage = 15): LengthAwarePaginator
     {
-        return [MODEL]::query()
-            ->search($filters['search'] ?? null)
-            ->status($filters['status'] ?? null)
-            ->dateRange($filters['from_date'] ?? null, $filters['to_date'] ?? null)
-            ->latest()
-            ->paginate($perPage)
-            ->withQueryString();
+        $query = [MODEL]::query()->latest('id');
+
+        // Apply filters
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+[SEARCH_COLUMNS]
+[END_SEARCH_COLUMNS]
+            });
+        }
+
+        return $query->paginate($perPage, page: $page);
     }
 
     /**
-     * Get single record by ID
+     * Find a record by ID.
      */
-    public function show(int $id): [MODEL]
+    public function find(int $id): [MODEL]
     {
-        return [MODEL]::findOrFail($id);
+        return [MODEL]::query()->findOrFail($id);
     }
 
     /**
-     * Create new record
+     * Store a new record.
      */
-    public function store(array $data): [MODEL]
+    public function create(array $payload): [MODEL]
     {
-        return DB::transaction(function () use ($data) {
-            return [MODEL]::create($data);
+        return DB::transaction(function () use ($payload): [MODEL] {
+            return [MODEL]::create($payload);
         });
     }
 
     /**
-     * Update existing record
+     * Update an existing record.
      */
-    public function update([MODEL] $model, array $data): [MODEL]
+    public function update(int $id, array $payload): [MODEL]
     {
-        return DB::transaction(function () use ($model, $data) {
-            $model->update($data);
-            return $model->fresh();
+        return DB::transaction(function () use ($id, $payload): [MODEL] {
+            $model = $this->find($id);
+            $model->update($payload);
+            return $model;
         });
     }
 
     /**
-     * Delete record
+     * Delete a record.
      */
-    public function destroy([MODEL] $model): bool
+    public function delete(int $id): void
     {
-        return DB::transaction(function () use ($model) {
-            return $model->delete();
+        DB::transaction(function () use ($id): void {
+            $model = $this->find($id);
+            $model->delete();
         });
-    }
-
-    /**
-     * Get options for dropdowns
-     */
-    public function getOptions(): array
-    {
-        return [MODEL]::pluck('name', 'id')->toArray();
     }
 }
