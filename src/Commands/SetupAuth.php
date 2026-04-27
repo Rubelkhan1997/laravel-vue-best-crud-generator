@@ -203,9 +203,9 @@ PHP;
             $isApi = strpos($filePath, 'api.php') !== false;
             $stubPath = __DIR__ . '/../../stubs';
             
-            if ($isApi && File::exists("{$stubPath}/api-routes.stub")) {
+            if ($isApi && File::exists("{$stubPath}/auth-routes.stub")) {
                 // Use stub if exists
-                $content = File::get("{$stubPath}/api-routes.stub");
+                $content = File::get("{$stubPath}/auth-routes.stub");
             } else {
                 // Create basic route file
                 $content = "<?php\n\nuse Illuminate\\Support\\Facades\\Route;\n";

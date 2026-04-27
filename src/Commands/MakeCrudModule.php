@@ -1071,33 +1071,6 @@ class MakeCrudModule extends Command
         return ".{$titleField['name']}";
     }
 
-    protected function getValidationRules(): string
-    {
-        return collect($this->fields)
-            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']))
-            ->map(function ($f) {
-                $rules = [];
-                if ($f['required']) {
-                    $rules[] = "'required'";
-                    if ($f['type'] === 'string') {
-                        $rules[] = "'string'";
-                    }
-                    if ($f['type'] === 'email') {
-                        $rules[] = "'email'";
-                    }
-                } else {
-                    $rules[] = "'nullable'";
-                }
-                if ($f['unique']) {
-                    $rules[] = "'unique:" . $this->tableName . "," . $f['name'] . "'";
-                }
-
-                $rulesStr = implode(', ', $rules);
-                return "            '{$f['name']}' => [{$rulesStr}],";
-            })
-            ->implode("\n");
-    }
-
     protected function getMigrationColumns(): string
     {
         return collect($this->fields)
