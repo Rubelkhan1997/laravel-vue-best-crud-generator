@@ -25,17 +25,12 @@ A powerful CRUD generator for Laravel + Vue 3 projects using **Inertia.js**, **P
 If you're using this package from a local `packages/` directory, update your root `composer.json`:
 
 ```json
-{
-    "repositories": [
-        {
-            "type": "path",
-            "url": "packages/rubel/laravel-vue-best-crud-generator",
-            "options": {
-                "symlink": true
-            }
-        }
-    ]
-}
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/Rubelkhan1997/laravel-vue-best-crud-generator"
+    }
+],
 ```
 
 ### Step 2 — Install the Package
@@ -50,15 +45,18 @@ composer require rubel/laravel-vue-best-crud-generator:@dev
 
 **Required:**
 ```bash
+php artisan install:api
 composer require inertiajs/inertia-laravel
+composer require laravel/sanctum
+composer spatie/laravel-permission
+composer spatie/laravel-data
+
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+php artisan migrate
+
 npm install vue @inertiajs/vue3 pinia axios typescript
 ```
-
-**Recommended (for auth and permission-aware stubs):**
-```bash
-composer require laravel/sanctum spatie/laravel-permission
-```
-
+ 
 > Skip any dependency you already have installed.
 
 ### Step 4 — Publish Config & Stubs
@@ -91,14 +89,14 @@ npm run dev
 
 | Command | Description |
 |---|---|
-| `php artisan make:rubel-crud-module` | Generate a full CRUD module |
+| `php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config` | Publish config file |
+| `php artisan vendor:publish --tag=laravel-vue-best-crud-generator-stubs` | Publish stub files |
+| `php artisan vendor:publish --tag=laravel-vue-best-crud-generator-frontend` | Publish frontend files |
 | `php artisan crud-generator:publish-assets` | Publish shared frontend assets |
 | `php artisan crud-generator:publish-assets --force` | Force overwrite frontend assets |
 | `php artisan crud-generator:setup-auth` | Setup default auth scaffolding |
 | `php artisan crud-generator:setup-auth --force` | Force overwrite auth files |
-| `php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config` | Publish config file |
-| `php artisan vendor:publish --tag=laravel-vue-best-crud-generator-stubs` | Publish stub files |
-| `php artisan vendor:publish --tag=laravel-vue-best-crud-generator-frontend` | Publish frontend files |
+| `php artisan make:rubel-crud-module` | Generate a full CRUD module |
 
 ---
 
