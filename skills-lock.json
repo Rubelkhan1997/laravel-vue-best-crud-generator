@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "skills": {
+    "laravel-11-12-app-guidelines": {
+      "source": "thienanblog/awesome-ai-agent-skills",
+      "sourceType": "github",
+      "computedHash": "609d456c9d92ca136589a0d89cc60e76b1619731521892a5f707f58589fc2473"
+    },
+    "laravel-packages": {
+      "source": "leeovery/agentic-skills",
+      "sourceType": "github",
+      "computedHash": "81952bf4a75c7c11f256e93a73013b26e40883e7db5d30dfbb32b6e7d4113d5c"
+    },
+    "laravel-security": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "computedHash": "86d246c2eb8fcda4586e13f9e32cd55e3ff222f6079a7f0b4442ef5e4e0971e7"
+    },
+    "laravel-specialist": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "computedHash": "3fb2841e7b0e05d64484970fdbb03063327d904c270b2e46b9217b18863132ca"
+    },
+    "vue": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "computedHash": "f72b54618560c53d65740515ded5bb833750c4574dbe961fd21f022bd2b31a74"
+    },
+    "vue-best-practices": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "computedHash": "b61d50aeced30790f4e8e08d15da4b7148443e312bd3c6fedc38b500baa75f17"
+    },
+    "vue-debug-guides": {
+      "source": "hyf0/vue-skills",
+      "sourceType": "github",
+      "computedHash": "58bb2ad9e92dce0c15b42acc65aeec1dd93bc36f9db96ab248e52b1d22945472"
+    },
+    "vue-pinia-best-practices": {
+      "source": "vuejs-ai/skills",
+      "sourceType": "github",
+      "computedHash": "ab191c9cc34d755e5e2133bbedc56bd5f9ba0841e242a7b54c818780a5c78a9c"
+    },
+    "vue-typescript": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "computedHash": "9d3728c68b18d28deea5b5ffbbaac24d3ab574275c1bf001ad44c08b3fb1fec8"
+    },
+    "vueuse-functions": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "computedHash": "66643d68bd9da4887e87a0bcb35af9ff4c9c35115ac57f3dd89cd65320046d80"
+    }
+  }
+}
