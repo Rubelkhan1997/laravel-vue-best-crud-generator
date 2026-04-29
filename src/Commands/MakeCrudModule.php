@@ -341,14 +341,59 @@ class MakeCrudModule extends Command
 
     protected function updateRoutes(): void
     {
-        // Show route snippets to user
-        $this->info("\n📌 Add these routes to your routes files:");
-        
-        $this->info("\n--- routes/api.php ---");
-        $this->info($this->getApiRouteSnippet());
-        
-        $this->info("\n--- routes/web.php ---");
-        $this->info($this->getWebRouteSnippet());
+        $apiPath = base_path('routes/api.php');
+        $webPath = base_path('routes/web.php');
+
+        $apiUpdated = $this->appendRouteSnippetToFile($apiPath, $this->getApiRouteSnippet(), "api.{$this->routeName}.");
+        $webUpdated = $this->appendRouteSnippetToFile($webPath, $this->getWebRouteSnippet(), "{$this->routeName}.");
+
+        if ($apiUpdated) {
+            $this->info("API routes added to routes/api.php");
+        } else {
+            $this->info("Skipped routes/api.php (already exists)");
+        }
+
+        if ($webUpdated) {
+            $this->info("Web routes added to routes/web.php");
+        } else {
+            $this->info("Skipped routes/web.php (already exists)");
+        }
+    }
+
+    protected function appendRouteSnippetToFile(string $filePath, string $snippet, string $routeNameNeedle): bool
+    {
+        if (!File::exists($filePath)) {
+            return false;
+        }
+
+        $content = File::get($filePath);
+        if (str_contains($content, "->name('{$routeNameNeedle}')")) {
+            return false;
+        }
+
+        [$useLine, $routeBlock] = $this->splitRouteSnippet($snippet);
+
+        if ($useLine !== '' && !str_contains($content, $useLine)) {
+            $content .= "\n" . $useLine . "\n";
+        }
+
+        $content .= "\n" . $routeBlock . "\n";
+        File::put($filePath, $content);
+
+        return true;
+    }
+
+    protected function splitRouteSnippet(string $snippet): array
+    {
+        $parts = preg_split("/\n\s*\n/", trim($snippet), 2) ?: [];
+        $useLine = trim($parts[0] ?? '');
+        $routeBlock = trim($parts[1] ?? '');
+
+        if (!str_starts_with($useLine, 'use ') || $routeBlock === '') {
+            return ['', trim($snippet)];
+        }
+
+        return [$useLine, $routeBlock];
     }
 
     // File generation methods will be implemented with stubs
@@ -1506,7 +1551,7 @@ Route::middleware('auth')
         info("🚀 Next steps:");
         info("   1. Run: php artisan migrate");
         info("   2. Run: npm run dev");
-        info("   3. Add routes to routes/api.php and routes/web.php");
+        info("   3. Routes already added to routes/api.php and routes/web.php");
         info("   4. Visit: {$this->webRoute}");
         
         $this->newLine(2);
