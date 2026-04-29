@@ -102,6 +102,7 @@ class PublishFrontendAssets extends Command
             
             // Entry point
             "{$stubPath}/app.ts" => "{$targetPath}/app.ts",
+            "{$stubPath}/bootstrap.ts" => "{$targetPath}/bootstrap.ts",
 
             // TypeScript Configuration
             "{$stubPath}/tsconfig.json" => base_path('tsconfig.json'),
