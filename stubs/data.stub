@@ -12,7 +12,7 @@ class [MODEL]Data extends Data
      * Create a new data object.
      */
     public function __construct(
-[DATA_PROPERTIES]
+        [DATA_PROPERTIES]
     ) {
     }
 }

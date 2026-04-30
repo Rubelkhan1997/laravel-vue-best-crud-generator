@@ -30,7 +30,7 @@
 
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-[FIELDS_SHOW]
+                    [FIELDS_SHOW]
                 </div>
 
                 <div class="mt-6 pt-6 border-t border-slate-200">

@@ -30,7 +30,7 @@ readonly class [MODEL]Service
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-[SEARCH_COLUMNS]
+                [SEARCH_COLUMNS];
             });
         }
 

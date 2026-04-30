@@ -121,11 +121,11 @@
     });
 
     const tableHeaders = computed(() => ([
-[FIELDS_HEADERS]
+        [FIELDS_HEADERS]
     ]));
 
     const tableColumns = [
-[FIELDS_COLUMNS]
+        [FIELDS_COLUMNS]
     ];
 
     const searchQuery = ref('');

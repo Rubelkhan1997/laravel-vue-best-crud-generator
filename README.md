@@ -33,23 +33,16 @@ If you're using this package from a local `packages/` directory, update your roo
 ],
 ```
 
-### Step 2 — Install the Package
-
-```bash
-composer require rubel/laravel-vue-best-crud-generator:@dev
-```
-
-> If you get a `could not find a matching version` error, make sure you're using `:@dev`. Using `"minimum-stability": "dev"` globally in `composer.json` is an alternative but `:@dev` is safer.
-
-### Step 3 — Install Frontend & Backend Dependencies
+### Step 2 — Install Frontend & Backend Dependencies
 
 **Required:**
 ```bash
-php artisan install:api
-composer require inertiajs/inertia-laravel
 composer require laravel/sanctum
-composer spatie/laravel-permission
-composer spatie/laravel-data
+composer requires patie/laravel-permission
+composer require spatie/laravel-data
+composer require inertiajs/inertia-laravel
+or
+composer require laravel/sanctum spatie/laravel-permission spatie/laravel-data inertiajs/inertia-laravel -W
 
 php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
 php artisan migrate
@@ -59,14 +52,32 @@ npm install vue @inertiajs/vue3 pinia axios typescript
  
 > Skip any dependency you already have installed.
 
+
+### Step 3 — Install the Package
+
+```bash
+composer require rubel/laravel-vue-best-crud-generator:@dev
+```
+
+> If you get a `could not find a matching version` error, make sure you're using `:@dev`. Using `"minimum-stability": "dev"` globally in `composer.json` is an alternative but `:@dev` is safer.
+
+
+
 ### Step 4 — Publish Config & Stubs
 
 ```bash
 php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
 php artisan vendor:publish --tag=laravel-vue-best-crud-generator-stubs
+php artisan crud-generator:publish-assets
+
 ```
 
-Optional — publish frontend assets:
+# Optional: Setup authentication (login, register, user system)
+```bash
+php artisan crud-generator:setup-auth 
+```
+
+# Optional — publish frontend assets:
 ```bash
 php artisan vendor:publish --tag=laravel-vue-best-crud-generator-frontend
 ```
@@ -148,9 +159,9 @@ npm run dev
 ### 🆕 New Project / Starter Template
 
 ```bash
-composer require rubel/laravel-vue-best-crud-generator:@dev
-composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission spatie/laravel-data
+composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission spatie/laravel-data -W
 npm install vue @inertiajs/vue3 pinia axios typescript
+composer require rubel/laravel-vue-best-crud-generator:@dev
 php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
 php artisan crud-generator:publish-assets
 php artisan crud-generator:setup-auth

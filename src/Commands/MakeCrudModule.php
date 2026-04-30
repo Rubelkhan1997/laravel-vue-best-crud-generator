@@ -666,12 +666,6 @@ class MakeCrudModule extends Command
             '[CASTS]',
             '[RELATIONSHIPS]',
             '[SEARCH_COLUMNS]',
-            '[FIELDS]',
-            '[COLUMNS]',
-            '[END_FILLABLE]',
-            '[END_CASTS]',
-            '[END_RELATIONSHIPS]',
-            '[END_SEARCH_COLUMNS]',
             '[FIELDS_FORM]',
             '[FIELDS_FORM_DATA]',
             '[FIELDS_FORM_DATA_EDIT]',
@@ -686,6 +680,14 @@ class MakeCrudModule extends Command
             '[FIELDS_COLUMNS]',
             '[FIELDS_SHOW]',
             '[FIELDS_SHOW_TITLE]',
+            '[FIELDS_MAPPER]',
+            '[FIELDS_MAPPER_TO_API]',
+            '[FIELDS]',
+            '[COLUMNS]',
+            '[END_FILLABLE]',
+            '[END_CASTS]',
+            '[END_RELATIONSHIPS]',
+            '[END_SEARCH_COLUMNS]',
             '[DATA_PROPERTIES]',
             '[VALIDATION_MESSAGES]',
             '[VALIDATION_RULES_ARRAY]',
@@ -713,12 +715,6 @@ class MakeCrudModule extends Command
             $this->getCasts(),
             $this->getRelationships(),
             $this->getSearchColumns(),
-            $this->getFieldsList(),
-            $this->getMigrationColumns(),
-            '',
-            '',
-            '',
-            '',
             $this->getFieldsForm(),
             $this->getFieldsFormData(),
             $this->getFieldsFormDataEdit(),
@@ -733,6 +729,14 @@ class MakeCrudModule extends Command
             $this->getFieldsColumns(),
             $this->getFieldsShow(),
             $this->getFieldsShowTitle(),
+            $this->getFieldsMapper(),
+            $this->getFieldsMapperToApi(),
+            $this->getFieldsList(),
+            $this->getMigrationColumns(),
+            '',
+            '',
+            '',
+            '',
             $this->getDataProperties(),
             $this->getValidationMessages(),
             $this->getValidationRulesArray(),
@@ -822,6 +826,44 @@ class MakeCrudModule extends Command
                 return "            '{$fieldName}' => \$this->{$fieldName},";
             })
             ->implode("\n");
+    }
+
+    /**
+     * Generate TypeScript model mapper fields for mappers.stub.
+     */
+    protected function getFieldsMapper(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+
+            return "        {$fieldName}: source.{$fieldName},";
+        })->implode("\n");
+    }
+
+    /**
+     * Generate TypeScript DTO-to-API mapper fields for mappers.stub.
+     */
+    protected function getFieldsMapperToApi(): string
+    {
+        $userFields = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at']));
+
+        if ($userFields->isEmpty()) {
+            return '';
+        }
+
+        return $userFields->map(function ($f) {
+            $fieldName = $f['name'];
+
+            return "        {$fieldName}: dto.{$fieldName},";
+        })->implode("\n");
     }
 
     /**

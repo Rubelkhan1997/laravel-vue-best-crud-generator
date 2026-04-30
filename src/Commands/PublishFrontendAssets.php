@@ -110,6 +110,9 @@ class PublishFrontendAssets extends Command
 
             // Vite Configuration
             "{$stubPath}/vite.config.js" => base_path('vite.config.js'),
+
+            // Backend view
+            __DIR__ . '/../../stubs-backend/Views/app.blade.php' => resource_path('views/app.blade.php'),
         ];
 
         $published = 0;

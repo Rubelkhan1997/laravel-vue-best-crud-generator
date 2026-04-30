@@ -26,7 +26,7 @@ class [REQUEST_TYPE][MODEL]Request extends FormRequest
     public function rules(): array
     {
         return [
-[VALIDATION_RULES_ARRAY]
+            [VALIDATION_RULES_ARRAY]
         ];
     }
 
@@ -36,7 +36,7 @@ class [REQUEST_TYPE][MODEL]Request extends FormRequest
     public function messages(): array
     {
         return [
-[VALIDATION_MESSAGES]
+            [VALIDATION_MESSAGES]
         ];
     }
 
