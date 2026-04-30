@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Models\[MODEL];
+namespace App\Modules\[MODULE_NAMESPACE]\Models\[MODEL];
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +16,7 @@ class [MODEL] extends Model
     protected $table = '[TABLE]';
 
     protected $fillable = [
-[FILLABLE]
+        [FILLABLE]
     ];
 
     /**
@@ -27,11 +27,11 @@ class [MODEL] extends Model
     protected function casts(): array
     {
         return [
-[CASTS]
+            [CASTS]
         ];
     }
 
-[RELATIONSHIPS]
+    [RELATIONSHIPS]
 
     /**
      * Scope: Search by keyword
@@ -43,7 +43,8 @@ class [MODEL] extends Model
         }
 
         return $query->where(function ($q) use ($search) {
-[SEARCH_COLUMNS]
+            [SEARCH_COLUMNS];
         });
     }
 }
+

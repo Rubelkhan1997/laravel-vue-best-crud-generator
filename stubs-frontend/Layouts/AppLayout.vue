@@ -85,7 +85,7 @@
 <script setup lang="ts">
     import { router, usePage } from '@inertiajs/vue3';
     import { computed, inject, onMounted } from 'vue';
-    import { useAuth } from '@/Composables/Auth/useAuth';
+    // import { useAuth } from '@/Composables/Auth/useAuth';
     import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
     import type { confirm as ConfirmType } from '@/Plugins/confirm';
 
@@ -96,21 +96,21 @@
     // ─────────────────────────────────────────────────────────
     // Composable
     // ─────────────────────────────────────────────────────────
-    const { logout, userName, userRole, loading, initializeFromInertia } = useAuth();
+    // const { logout, userName, userRole, loading, initializeFromInertia } = useAuth();
 
     // ─────────────────────────────────────────────────────────
     // Initialize user from Inertia props
     // ─────────────────────────────────────────────────────────
     const page = usePage();
     
-    onMounted(() => {
+    // onMounted(() => {
         // Initialize auth state from Inertia shared props (HandleInertiaRequests)
-        const authUser = (page.props as any).auth?.user ?? null;
+        // const authUser = (page.props as any).auth?.user ?? null;
 
-        if (authUser) {
-            initializeFromInertia(authUser);
-        }
-    });
+        // if (authUser) {
+        //     initializeFromInertia(authUser);
+        // }
+    // });
 
     // ─────────────────────────────────────────────────────────
     // Computed

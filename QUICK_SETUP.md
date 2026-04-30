@@ -32,7 +32,7 @@ composer require rubel/laravel-vue-best-crud-generator:@dev
 
 ```bash
 composer require inertiajs/inertia-laravel
-npm install vue @inertiajs/vue3 pinia axios typescript
+npm install vue @inertiajs/vue3 pinia axios typescript @vitejs/plugin-vue --save-dev
 ```
 
 ### Recommended for auth and permission-aware stubs
@@ -133,7 +133,7 @@ php artisan crud-generator:setup-auth
 ```bash
 composer require rubel/laravel-vue-best-crud-generator:@dev
 composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission
-npm install vue @inertiajs/vue3 pinia axios typescript
+npm install vue @inertiajs/vue3 pinia axios typescript @vitejs/plugin-vue --save-dev
 php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
 php artisan crud-generator:publish-assets
 php artisan crud-generator:setup-auth

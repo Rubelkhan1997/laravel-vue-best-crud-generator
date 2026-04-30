@@ -27,9 +27,9 @@ export interface [MODEL_NAME]Pagination {
 // DTO Types (API Payload)
 // ============================================================================
 export interface Create[MODEL_NAME]Dto {
-[CREATE_DTO_FIELDS]
+    [CREATE_DTO_FIELDS]
 }
 
 export interface Update[MODEL_NAME]Dto {
-[UPDATE_DTO_FIELDS]
+    [UPDATE_DTO_FIELDS]
 }

@@ -16,7 +16,7 @@ export function mapTo[MODEL_NAME](api: Record<string, any>): [MODEL_NAME] {
 
     return {
         id: source.id,
-[FIELDS]
+        [FIELDS_MAPPER]
         createdAt: source.created_at ?? source.createdAt,
         updatedAt: source.updated_at ?? source.updatedAt,
     };
@@ -49,7 +49,7 @@ export function mapTo[MODEL_NAME]FiltersApi(filters: [MODEL_NAME]Filters): Recor
  */
 export function mapCreate[MODEL_NAME]ToApi(dto: Create[MODEL_NAME]Dto): Record<string, any> {
     return {
-[FIELDS]
+        [FIELDS_MAPPER_TO_API]
     };
 }
 
@@ -58,6 +58,6 @@ export function mapCreate[MODEL_NAME]ToApi(dto: Create[MODEL_NAME]Dto): Record<s
  */
 export function mapUpdate[MODEL_NAME]ToApi(dto: Update[MODEL_NAME]Dto): Record<string, any> {
     return {
-[FIELDS]
+        [FIELDS_MAPPER_TO_API]
     };
 }

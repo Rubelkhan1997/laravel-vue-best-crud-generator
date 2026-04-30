@@ -13,7 +13,7 @@ export { useI18n } from './useI18n';
 export { usePermissionService } from './usePermissionService';
 
 // Auth composable
-export { useAuth } from './Auth/useAuth';
+// export { useAuth } from './Auth/useAuth';
 
 // FrontDesk module composables
 // export { useReservations } from './FrontDesk/useReservations';

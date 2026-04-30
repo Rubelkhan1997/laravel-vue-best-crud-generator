@@ -13,7 +13,7 @@
                 href="[web_route]/create"
                 class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
             >
-                {{ t('[feature_plural].new_[feature_name]') }}
+                {{ `${t('actions.create')} ${t('navigation.[feature_plural]')}` }}
             </Link>
         </div>
 
@@ -121,11 +121,11 @@
     });
 
     const tableHeaders = computed(() => ([
-[FIELDS_HEADERS]
+        [FIELDS_HEADERS]
     ]));
 
     const tableColumns = [
-[FIELDS_COLUMNS]
+        [FIELDS_COLUMNS]
     ];
 
     const searchQuery = ref('');

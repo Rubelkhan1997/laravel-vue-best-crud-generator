@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Controllers\Web;
+namespace App\Modules\[MODULE_NAMESPACE]\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Modules\[MODULE]\Resources\[MODEL]Resource;
-use App\Modules\[MODULE]\Services\[MODEL]Service;
+use App\Modules\[MODULE_NAMESPACE]\Resources\[MODEL]Resource;
+use App\Modules\[MODULE_NAMESPACE]\Services\[MODEL]Service;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,7 +24,7 @@ class [MODEL]Controller extends Controller
      */
     public function index(Request $request): Response
     {
-        return Inertia::render('[MODULE]/[FEATURE_NAME]/Index');
+        return Inertia::render('[MODULE_PATH]/[FEATURE_NAME]/Index');
     }
 
     /**
@@ -33,7 +33,7 @@ class [MODEL]Controller extends Controller
     public function create(): Response
     {
         try {
-            return Inertia::render('[MODULE]/[FEATURE_NAME]/Create');
+            return Inertia::render('[MODULE_PATH]/[FEATURE_NAME]/Create');
         } catch (Throwable $e) {
             logger()->error('Error loading create form: ' . $e->getMessage());
             abort(500, 'Failed to load form');
@@ -48,7 +48,7 @@ class [MODEL]Controller extends Controller
         try {
             $model = $this->service->find($id);
 
-            return Inertia::render('[MODULE]/[FEATURE_NAME]/Show', [
+            return Inertia::render('[MODULE_PATH]/[FEATURE_NAME]/Show', [
                 '[model_name]' => new [MODEL]Resource($model),
             ]);
         } catch (Throwable $e) {
@@ -65,7 +65,7 @@ class [MODEL]Controller extends Controller
         try {
             $model = $this->service->find($id);
 
-            return Inertia::render('[MODULE]/[FEATURE_NAME]/Edit', [
+            return Inertia::render('[MODULE_PATH]/[FEATURE_NAME]/Edit', [
                 '[model_name]' => new [MODEL]Resource($model),
             ]);
         } catch (Throwable $e) {
@@ -74,3 +74,5 @@ class [MODEL]Controller extends Controller
         }
     }
 }
+
+

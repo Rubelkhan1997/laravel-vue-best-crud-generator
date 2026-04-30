@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Modules\[MODULE]\Models\[MODEL];
+use App\Modules\[MODULE_NAMESPACE]\Models\[MODEL];
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -43,7 +43,7 @@ class [MODEL]Test extends TestCase
     public function it_can_create_[model_name]()
     {
         $data = [
-[FIELDS]
+            [FIELDS]
         ];
 
         $response = $this->postJson('/[api_route]/[feature_plural]', $data);
@@ -55,7 +55,7 @@ class [MODEL]Test extends TestCase
             ]);
 
         $this->assertDatabaseHas('[TABLE]', [
-[FIELDS_DB]
+            [FIELDS_DB]
         ]);
     }
 
@@ -81,7 +81,7 @@ class [MODEL]Test extends TestCase
         $[model_name] = [MODEL]::factory()->create();
 
         $data = [
-[FIELDS_UPDATE]
+            [FIELDS_UPDATE]
         ];
 
         $response = $this->putJson("/[api_route]/[feature_plural]/{$[model_name]->id}", $data);
@@ -93,7 +93,7 @@ class [MODEL]Test extends TestCase
             ]);
 
         $this->assertDatabaseHas('[TABLE]', [
-[FIELDS_DB_UPDATE]
+            [FIELDS_DB_UPDATE]
         ]);
     }
 
@@ -134,7 +134,8 @@ class [MODEL]Test extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors([
-[VALIDATION_ERRORS]
+                [VALIDATION_ERRORS]
             ]);
     }
 }
+

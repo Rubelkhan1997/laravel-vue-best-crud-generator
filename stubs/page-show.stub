@@ -8,7 +8,7 @@
                     <h1 class="text-2xl font-semibold text-slate-800">
                         {{ [model_name]Data[FIELDS_SHOW_TITLE] }}
                     </h1>
-                    <p class="text-sm text-slate-500 mt-1">{{ t('[feature_plural].[feature_name]_details') }}</p>
+                    <p class="text-sm text-slate-500 mt-1">{{ `${t('actions.view')} ${t('navigation.[feature_plural]')}` }}</p>
                 </div>
 
                 <div class="flex gap-2">
@@ -16,7 +16,7 @@
                         v-if="canEdit"
                         type="button"
                         color="primary"
-                        :name="t('[feature_plural].edit_[feature_name]')"
+                        :name="`${t('actions.edit')} ${t('navigation.[feature_plural]')}`"
                         @click="router.visit(`[web_route]/${[model_name]Data.id}/edit`)"
                     />
                     <FormButton
@@ -30,7 +30,7 @@
 
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-[FIELDS_SHOW]
+                    [FIELDS_SHOW]
                 </div>
 
                 <div class="mt-6 pt-6 border-t border-slate-200">

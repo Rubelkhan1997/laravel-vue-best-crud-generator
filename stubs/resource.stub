@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Resources;
+namespace App\Modules\[MODULE_NAMESPACE]\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -18,9 +18,10 @@ class [MODEL]Resource extends JsonResource
     {
         return [
             'id' => $this->id,
-[FIELDS]
+            [FIELDS]
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];
     }
 }
+
