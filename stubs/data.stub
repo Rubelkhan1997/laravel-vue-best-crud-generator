@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Data;
+namespace App\Modules\[MODULE_NAMESPACE]\Data;
 
 use Spatie\LaravelData\Data;
 
@@ -16,3 +16,4 @@ class [MODEL]Data extends Data
     ) {
     }
 }
+

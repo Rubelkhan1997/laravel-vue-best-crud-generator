@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Controllers\Api\V1;
+namespace App\Modules\[MODULE_NAMESPACE]\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Modules\[MODULE]\Data\[MODEL]Data;
-use App\Modules\[MODULE]\Requests\Store[MODEL]Request;
-use App\Modules\[MODULE]\Requests\Update[MODEL]Request;
-use App\Modules\[MODULE]\Resources\[MODEL]Resource;
-use App\Modules\[MODULE]\Services\[MODEL]Service;
+use App\Modules\[MODULE_NAMESPACE]\Data\[MODEL]Data;
+use App\Modules\[MODULE_NAMESPACE]\Requests\Store[MODEL]Request;
+use App\Modules\[MODULE_NAMESPACE]\Requests\Update[MODEL]Request;
+use App\Modules\[MODULE_NAMESPACE]\Resources\[MODEL]Resource;
+use App\Modules\[MODULE_NAMESPACE]\Services\[MODEL]Service;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -131,3 +131,4 @@ class [MODEL]Controller extends Controller
         }
     }
 }
+

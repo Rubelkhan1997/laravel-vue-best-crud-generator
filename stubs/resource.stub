@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Resources;
+namespace App\Modules\[MODULE_NAMESPACE]\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -24,3 +24,4 @@ class [MODEL]Resource extends JsonResource
         ];
     }
 }
+

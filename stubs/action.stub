@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Actions;
+namespace App\Modules\[MODULE_NAMESPACE]\Actions;
 
-use App\Modules\[MODULE]\Models\[MODEL];
+use App\Modules\[MODULE_NAMESPACE]\Models\[MODEL];
 
 class Create[MODEL]Action
 {
@@ -18,3 +18,4 @@ class Create[MODEL]Action
         return [MODEL]::query()->create($payload);
     }
 }
+

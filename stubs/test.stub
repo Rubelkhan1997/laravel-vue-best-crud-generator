@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Modules\[MODULE]\Models\[MODEL];
+use App\Modules\[MODULE_NAMESPACE]\Models\[MODEL];
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -138,3 +138,4 @@ class [MODEL]Test extends TestCase
             ]);
     }
 }
+

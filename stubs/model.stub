@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Models\[MODEL];
+namespace App\Modules\[MODULE_NAMESPACE]\Models\[MODEL];
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,3 +47,4 @@ class [MODEL] extends Model
         });
     }
 }
+

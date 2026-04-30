@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Requests;
+namespace App\Modules\[MODULE_NAMESPACE]\Requests;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -54,3 +54,4 @@ class [REQUEST_TYPE][MODEL]Request extends FormRequest
         );
     }
 }
+

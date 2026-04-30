@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\[MODULE]\Services;
+namespace App\Modules\[MODULE_NAMESPACE]\Services;
 
-use App\Modules\[MODULE]\Actions\Create[MODEL]Action;
-use App\Modules\[MODULE]\Data\[MODEL]Data;
-use App\Modules\[MODULE]\Models\[MODEL];
+use App\Modules\[MODULE_NAMESPACE]\Actions\Create[MODEL]Action;
+use App\Modules\[MODULE_NAMESPACE]\Data\[MODEL]Data;
+use App\Modules\[MODULE_NAMESPACE]\Models\[MODEL];
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -78,3 +78,4 @@ readonly class [MODEL]Service
         });
     }
 }
+

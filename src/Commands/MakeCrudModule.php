@@ -20,6 +20,8 @@ class MakeCrudModule extends Command
     protected $description = 'Generate a complete CRUD module for Laravel + Vue + Inertia + Pinia';
 
     protected string $moduleName;
+    protected string $modulePath;
+    protected string $moduleNamespace;
     protected string $featureName;
     protected string $modelName;
     protected string $tableName;
@@ -74,32 +76,41 @@ class MakeCrudModule extends Command
 
     protected function collectModuleInfo(): void
     {
+        info("\nModule/Feature input rules:");
+        info("1) Simple mode: Module = FrontDesk, Feature = Booking");
+        info("   -> Generates under app/Modules/FrontDesk and resources/js/.../FrontDesk");
+        info("2) Path mode: Feature = Partner/Reservation/Booking (or Partner.Reservation.Booking)");
+        info("   -> Last segment = Feature, previous segments = Module path");
+        info("   -> Generates under app/Modules/Partner/Reservation and matching JS/Vue paths\n");
+
         $this->moduleName = text(
             label: 'Module Name (e.g., FrontDesk, Admin, Billing)',
             required: 'Module name is required',
             default: 'FrontDesk',
-            hint: 'This will be the namespace for your module'
+            hint: 'Used when Feature is simple name. If Feature contains path, that path overrides Module Name.'
         );
 
-        $this->featureName = text(
-            label: 'Feature Name (e.g., Hotel, Room, Guest, Reservation)',
+        $featureInput = text(
+            label: 'Feature Name or Path (e.g., Hotel, Admin/Partner/Reservation)',
             required: 'Feature name is required',
-            hint: 'Singular PascalCase name of your feature'
+            hint: 'Simple: Booking. Path: Partner/Reservation/Booking or Partner.Reservation.Booking'
         );
 
+        $this->resolveModuleAndFeature($this->moduleName, $featureInput);
         $this->modelName = $this->featureName;
         
         $this->tableName = text(
             label: 'Table Name',
             required: 'Table name is required',
             default: Str::plural(strtolower($this->featureName)),
-            hint: 'Database table name (plural, snake_case)'
+            hint: 'Database table name (plural, snake_case). Path input supported: Partner/Reservation/Booking'
         );
+        $this->tableName = $this->normalizeTableName($this->tableName);
 
         $this->apiRoute = text(
             label: 'API Route',
             required: 'API route is required',
-            default: '/' . Str::kebab($this->moduleName) . '/' . Str::plural(Str::kebab($this->featureName)),
+            default: '/' . $this->toRoutePath($this->modulePath) . '/' . Str::plural(Str::kebab($this->featureName)),
             hint: 'API endpoint path'
         );
 
@@ -112,6 +123,61 @@ class MakeCrudModule extends Command
 
         $this->routeName = Str::plural(Str::kebab($this->featureName));
         $this->permissionName = Str::plural(Str::kebab($this->featureName));
+    }
+
+    protected function resolveModuleAndFeature(string $moduleInput, string $featureInput): void
+    {
+        $moduleSegments = $this->normalizePathSegments($moduleInput);
+        $featureSegments = $this->normalizePathSegments($featureInput);
+
+        if (count($featureSegments) > 1) {
+            $this->featureName = Str::studly(array_pop($featureSegments));
+            $moduleSegments = $featureSegments;
+        } else {
+            $this->featureName = Str::studly($featureSegments[0] ?? 'Feature');
+        }
+
+        if (empty($moduleSegments)) {
+            $moduleSegments = ['FrontDesk'];
+        }
+
+        $moduleSegments = array_map(fn(string $segment) => Str::studly($segment), $moduleSegments);
+        $this->modulePath = implode('/', $moduleSegments);
+        $this->moduleNamespace = implode('\\', $moduleSegments);
+        $this->moduleName = $this->modulePath;
+    }
+
+    protected function normalizePathSegments(string $input): array
+    {
+        $normalized = str_replace(['\\', '.'], '/', trim($input));
+
+        return array_values(array_filter(array_map('trim', explode('/', $normalized))));
+    }
+
+    protected function toRoutePath(string $path): string
+    {
+        return collect(explode('/', $path))
+            ->filter()
+            ->map(fn(string $segment) => Str::kebab($segment))
+            ->implode('/');
+    }
+
+    protected function normalizeTableName(string $input): string
+    {
+        $normalized = str_replace(['\\', '.', '-'], ['/', '/', '_'], trim($input));
+        $segments = array_values(array_filter(array_map(
+            fn(string $segment) => Str::snake($segment),
+            explode('/', $normalized)
+        )));
+
+        if (empty($segments)) {
+            return Str::plural(Str::snake($this->featureName));
+        }
+
+        $lastIndex = count($segments) - 1;
+        $segments[$lastIndex] = Str::plural($segments[$lastIndex]);
+
+        return implode('_', $segments);
     }
 
     protected function collectFields(): void
@@ -417,7 +483,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('model');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("app/Modules/{$this->moduleName}/Models/{$this->modelName}.php");
+        $path = base_path("app/Modules/{$this->modulePath}/Models/{$this->modelName}.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -429,7 +495,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('service');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("app/Modules/{$this->moduleName}/Services/{$this->modelName}Service.php");
+        $path = base_path("app/Modules/{$this->modulePath}/Services/{$this->modelName}Service.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -441,7 +507,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('api-controller');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("app/Modules/{$this->moduleName}/Controllers/Api/V1/{$this->modelName}Controller.php");
+        $path = base_path("app/Modules/{$this->modulePath}/Controllers/Api/V1/{$this->modelName}Controller.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -453,7 +519,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('web-controller');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("app/Modules/{$this->moduleName}/Controllers/Web/{$this->modelName}Controller.php");
+        $path = base_path("app/Modules/{$this->modulePath}/Controllers/Web/{$this->modelName}Controller.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -467,7 +533,7 @@ class MakeCrudModule extends Command
         $content = $this->replacePlaceholders($content);
         $content = str_replace('[permission_action]', 'create', $content);
 
-        $path = base_path("app/Modules/{$this->moduleName}/Requests/Store{$this->modelName}Request.php");
+        $path = base_path("app/Modules/{$this->modulePath}/Requests/Store{$this->modelName}Request.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
 
@@ -481,7 +547,7 @@ class MakeCrudModule extends Command
         $content = $this->replacePlaceholders($content);
         $content = str_replace('[permission_action]', 'edit', $content);
 
-        $path = base_path("app/Modules/{$this->moduleName}/Requests/Update{$this->modelName}Request.php");
+        $path = base_path("app/Modules/{$this->modulePath}/Requests/Update{$this->modelName}Request.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
 
@@ -493,7 +559,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('resource');
         $content = $this->replacePlaceholders($content);
 
-        $path = base_path("app/Modules/{$this->moduleName}/Resources/{$this->modelName}Resource.php");
+        $path = base_path("app/Modules/{$this->modulePath}/Resources/{$this->modelName}Resource.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
 
@@ -505,7 +571,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('data');
         $content = $this->replacePlaceholders($content);
 
-        $path = base_path("app/Modules/{$this->moduleName}/Data/{$this->modelName}Data.php");
+        $path = base_path("app/Modules/{$this->modulePath}/Data/{$this->modelName}Data.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
 
@@ -517,7 +583,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('action');
         $content = $this->replacePlaceholders($content);
 
-        $path = base_path("app/Modules/{$this->moduleName}/Actions/Create{$this->modelName}Action.php");
+        $path = base_path("app/Modules/{$this->modulePath}/Actions/Create{$this->modelName}Action.php");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
 
@@ -529,7 +595,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('types');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("resources/js/Types/{$this->moduleName}/" . strtolower($this->modelName) . ".ts");
+        $path = base_path("resources/js/Types/{$this->modulePath}/" . strtolower($this->modelName) . ".ts");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -553,7 +619,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('store');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("resources/js/Stores/{$this->moduleName}/" . strtolower($this->modelName) . "Store.ts");
+        $path = base_path("resources/js/Stores/{$this->modulePath}/" . strtolower($this->modelName) . "Store.ts");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -565,7 +631,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('composable');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("resources/js/Composables/{$this->moduleName}/use" . Str::plural($this->modelName) . ".ts");
+        $path = base_path("resources/js/Composables/{$this->modulePath}/use" . Str::plural($this->modelName) . ".ts");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -577,7 +643,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('page-index');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("resources/js/Pages/{$this->moduleName}/{$this->featureName}/Index.vue");
+        $path = base_path("resources/js/Pages/{$this->modulePath}/{$this->featureName}/Index.vue");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -589,7 +655,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('page-create');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("resources/js/Pages/{$this->moduleName}/{$this->featureName}/Create.vue");
+        $path = base_path("resources/js/Pages/{$this->modulePath}/{$this->featureName}/Create.vue");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -601,7 +667,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('page-edit');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("resources/js/Pages/{$this->moduleName}/{$this->featureName}/Edit.vue");
+        $path = base_path("resources/js/Pages/{$this->modulePath}/{$this->featureName}/Edit.vue");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -613,7 +679,7 @@ class MakeCrudModule extends Command
         $content = $this->getStub('page-show');
         $content = $this->replacePlaceholders($content);
         
-        $path = base_path("resources/js/Pages/{$this->moduleName}/{$this->featureName}/Show.vue");
+        $path = base_path("resources/js/Pages/{$this->modulePath}/{$this->featureName}/Show.vue");
         File::ensureDirectoryExists(dirname($path));
         File::put($path, $content);
         
@@ -649,6 +715,8 @@ class MakeCrudModule extends Command
     {
         $search = [
             '[MODULE]',
+            '[MODULE_NAMESPACE]',
+            '[MODULE_PATH]',
             '[MODULE_NAME]',
             '[MODEL]',
             '[MODEL_NAME]',
@@ -697,7 +765,9 @@ class MakeCrudModule extends Command
         ];
 
         $replace = [
-            $this->moduleName,
+            $this->moduleNamespace,
+            $this->moduleNamespace,
+            $this->modulePath,
             $this->moduleName,
             $this->modelName,
             $this->modelName,
@@ -1546,7 +1616,7 @@ class MakeCrudModule extends Command
 
     protected function getApiRouteSnippet(): string
     {
-        return "use App\\Modules\\{$this->moduleName}\\Controllers\\Api\\V1\\{$this->modelName}Controller as {$this->modelName}ApiController;
+        return "use App\\Modules\\{$this->moduleNamespace}\\Controllers\\Api\\V1\\{$this->modelName}Controller as {$this->modelName}ApiController;
 
 Route::middleware('auth:sanctum')
     ->prefix('v1/" . trim($this->apiRoute, '/') . "')
@@ -1562,7 +1632,7 @@ Route::middleware('auth:sanctum')
 
     protected function getWebRouteSnippet(): string
     {
-        return "use App\\Modules\\{$this->moduleName}\\Controllers\\Web\\{$this->modelName}Controller as {$this->modelName}WebController;
+        return "use App\\Modules\\{$this->moduleNamespace}\\Controllers\\Web\\{$this->modelName}Controller as {$this->modelName}WebController;
 
 Route::middleware('auth')
     ->prefix('" . trim($this->webRoute, '/') . "')
