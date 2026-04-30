@@ -86,7 +86,7 @@
     const [model_name]Data: [MODEL_NAME] = mapTo[MODEL_NAME](props.[model_name]);
 
     const form = useForm<Update[MODEL_NAME]Dto>({
-[FIELDS_FORM_DATA_EDIT]
+        [FIELDS_FORM_DATA_EDIT]
     });
 
     const isSaving = computed(() => form.processing || saving.value);
@@ -102,7 +102,7 @@
 
         try {
             const result = await update[MODEL_NAME](Number([model_name]Data.id), {
-[FIELDS_PAYLOAD_EDIT]
+                [FIELDS_PAYLOAD_EDIT]
             } as Update[MODEL_NAME]Dto);
 
             if (Number(result.status) === 1) {
@@ -125,13 +125,13 @@
 
     function validateForm(): boolean {
         return validateInertiaForm(form, {
-[VALIDATION_RULES_FORM]
+            [VALIDATION_RULES_FORM]
         });
     }
 
     function mapBackendField(field: string): string {
         const map: Record<string, string> = {
-[FIELDS_BACKEND_MAP]
+            [FIELDS_BACKEND_MAP]
         };
 
         return map[field] ?? field;

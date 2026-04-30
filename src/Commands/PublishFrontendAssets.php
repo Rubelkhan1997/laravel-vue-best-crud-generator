@@ -4,22 +4,19 @@ namespace Rubel\LaravelVueBestCrudGenerator\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class PublishFrontendAssets extends Command
 {
     protected $signature = 'crud-generator:publish-assets {--force : Overwrite existing files}';
-    protected $description = 'Publish default frontend assets to resources/js/';
+    protected $description = 'Publish default frontend and backend assets';
 
     public function handle(): int
     {
-        $this->info('╔══════════════════════════════════════════════════════════╗');
-        $this->info('║                                                          ║');
-        $this->info('║   📦 Publishing Frontend Assets                         ║');
-        $this->info('║                                                          ║');
-        $this->info('╚══════════════════════════════════════════════════════════╝');
-        $this->newLine();
+        $this->info('Publishing assets...');
 
         $stubPath = __DIR__ . '/../../stubs-frontend';
+        $backendStubPath = __DIR__ . '/../../stubs-backend';
         $targetPath = resource_path('js');
 
         $maps = [
@@ -69,7 +66,7 @@ class PublishFrontendAssets extends Command
             "{$stubPath}/Plugins/directives/permission.ts" => "{$targetPath}/Plugins/directives/permission.ts",
             "{$stubPath}/Plugins/directives/focus.ts" => "{$targetPath}/Plugins/directives/focus.ts",
             "{$stubPath}/Plugins/directives/clickOutside.ts" => "{$targetPath}/Plugins/directives/clickOutside.ts",
-            
+
             // Services
             "{$stubPath}/Services/apiClient.ts" => "{$targetPath}/Services/apiClient.ts",
             "{$stubPath}/Services/index.ts" => "{$targetPath}/Services/index.ts",
@@ -99,7 +96,7 @@ class PublishFrontendAssets extends Command
             "{$stubPath}/Utils/constants.ts" => "{$targetPath}/Utils/constants.ts",
             "{$stubPath}/Utils/rtl.ts" => "{$targetPath}/Utils/rtl.ts",
             "{$stubPath}/Utils/index.ts" => "{$targetPath}/Utils/index.ts",
-            
+
             // Entry point
             "{$stubPath}/app.ts" => "{$targetPath}/app.ts",
             "{$stubPath}/bootstrap.ts" => "{$targetPath}/bootstrap.ts",
@@ -112,7 +109,12 @@ class PublishFrontendAssets extends Command
             "{$stubPath}/vite.config.js" => base_path('vite.config.js'),
 
             // Backend view
-            __DIR__ . '/../../stubs-backend/Views/app.blade.php' => resource_path('views/app.blade.php'),
+            "{$backendStubPath}/Views/app.blade.php" => resource_path('views/app.blade.php'),
+
+            // Backend middleware
+            "{$backendStubPath}/Middleware/SecurityHeaders.php" => app_path('Http/Middleware/SecurityHeaders.php'),
+            "{$backendStubPath}/Middleware/HandleInertiaRequests.php" => app_path('Http/Middleware/HandleInertiaRequests.php'),
+            "{$backendStubPath}/Middleware/AuthenticateByToken.php" => app_path('Modules/Auth/Middleware/AuthenticateByToken.php'),
         ];
 
         $published = 0;
@@ -120,7 +122,7 @@ class PublishFrontendAssets extends Command
 
         foreach ($maps as $stub => $destination) {
             if (!File::exists($stub)) {
-                $this->warn("⚠️  Missing stub: {$stub}");
+                $this->warn("Missing stub: {$stub}");
                 continue;
             }
 
@@ -132,27 +134,84 @@ class PublishFrontendAssets extends Command
             File::ensureDirectoryExists(dirname($destination));
             File::copy($stub, $destination);
             $published++;
-            
+
             $relativeDest = str_replace(base_path() . '/', '', $destination);
-            $this->info("  ✅ {$relativeDest}");
+            $this->info("  Published: {$relativeDest}");
         }
 
-        $this->newLine();
-        $this->info("╔══════════════════════════════════════════════════════════╗");
-        $this->info("║                                                          ║");
-        $this->info("║   ✅ Published: {$published} files                          ║");
-        $this->info("║   ⏭️  Skipped: {$skipped} files (use --force to overwrite)  ║");
-        $this->info("║                                                          ║");
-        $this->info("╚══════════════════════════════════════════════════════════╝");
+        $this->mergeBootstrapConfiguration($backendStubPath);
 
         $this->newLine();
-        $this->info("🚀 Next steps:");
-        $this->info("   1. composer require spatie/laravel-permission");
-        $this->info("   2. npm install axios pinia @inertiajs/vue3");
-        $this->info("   3. npm run dev");
-        $this->info("   4. php artisan make:rubel-crud-module");
-        $this->newLine(2);
+        $this->info("Published: {$published} files");
+        $this->info("Skipped: {$skipped} files (use --force to overwrite)");
 
         return Command::SUCCESS;
+    }
+
+    protected function mergeBootstrapConfiguration(string $backendStubPath): void
+    {
+        $bootstrapPath = base_path('bootstrap/app.php');
+        $bootstrapStubPath = "{$backendStubPath}/bootstrap-app.php";
+
+        if (!File::exists($bootstrapPath)) {
+            if (File::exists($bootstrapStubPath)) {
+                File::ensureDirectoryExists(dirname($bootstrapPath));
+                File::copy($bootstrapStubPath, $bootstrapPath);
+                $this->info('  bootstrap/app.php created from stub');
+            } else {
+                $this->warn('  bootstrap/app.php missing and bootstrap stub not found');
+            }
+
+            return;
+        }
+
+        $content = File::get($bootstrapPath);
+        $updated = $content;
+        $changes = [];
+
+        if (!Str::contains($updated, "encryptCookies(['auth_token'])")) {
+            $updated = str_replace(
+                '->withMiddleware(function (Middleware $middleware): void {',
+                "->withMiddleware(function (Middleware \$middleware): void {\n        // Encrypt auth token cookie\n        \$middleware->encryptCookies(['auth_token']);",
+                $updated
+            );
+            $changes[] = 'Added encryptCookies for auth_token';
+        }
+
+        if (!Str::contains($updated, 'SecurityHeaders::class')) {
+            $updated = str_replace(
+                '->withMiddleware(function (Middleware $middleware): void {',
+                "->withMiddleware(function (Middleware \$middleware): void {\n        // Security headers\n        \$middleware->append(\\App\\Http\\Middleware\\SecurityHeaders::class);",
+                $updated
+            );
+            $changes[] = 'Added SecurityHeaders middleware';
+        }
+
+        if (!Str::contains($updated, "'auth.token'")) {
+            $updated = preg_replace(
+                '/(->withMiddleware\(function\s*\(Middleware\s*\$middleware\):\s*void\s*\{)/',
+                "$1\n        // Middleware aliases\n        \$middleware->alias([\n            'auth.token' => \\App\\Modules\\Auth\\Middleware\\AuthenticateByToken::class,\n            'permission' => \\Spatie\\Permission\\Middleware\\PermissionMiddleware::class,\n            'role' => \\Spatie\\Permission\\Middleware\\RoleMiddleware::class,\n            'role_or_permission' => \\Spatie\\Permission\\Middleware\\RoleOrPermissionMiddleware::class,\n        ]);",
+                $updated
+            );
+            $changes[] = 'Added middleware aliases';
+        }
+
+        if (!Str::contains($updated, 'HandleInertiaRequests::class')) {
+            $updated = preg_replace(
+                '/(->withMiddleware\(function\s*\(Middleware\s*\$middleware\):\s*void\s*\{)/',
+                "$1\n        // Inertia middleware for sharing props\n        \$middleware->web(append: [\n            \\App\\Http\\Middleware\\HandleInertiaRequests::class,\n        ]);",
+                $updated
+            );
+            $changes[] = 'Added HandleInertiaRequests middleware';
+        }
+
+        if ($updated !== $content) {
+            File::put($bootstrapPath, $updated);
+            foreach ($changes as $change) {
+                $this->info("  {$change}");
+            }
+        } else {
+            $this->info('  bootstrap/app.php already configured');
+        }
     }
 }

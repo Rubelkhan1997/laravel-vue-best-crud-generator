@@ -41,6 +41,8 @@ composer require laravel/sanctum
 composer requires patie/laravel-permission
 composer require spatie/laravel-data
 composer require inertiajs/inertia-laravel
+php artisan inertia:middleware
+
 or
 composer require laravel/sanctum spatie/laravel-permission spatie/laravel-data inertiajs/inertia-laravel -W
 
@@ -160,6 +162,7 @@ npm run dev
 
 ```bash
 composer require inertiajs/inertia-laravel laravel/sanctum spatie/laravel-permission spatie/laravel-data -W
+php artisan inertia:middleware
 npm install vue @inertiajs/vue3 pinia axios typescript
 composer require rubel/laravel-vue-best-crud-generator:@dev
 php artisan vendor:publish --tag=laravel-vue-best-crud-generator-config
