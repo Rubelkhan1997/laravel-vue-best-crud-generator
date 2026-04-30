@@ -1,11 +1,11 @@
 <template>
-    <Head :title="t('[feature_plural].edit_[feature_name]')" />
+    <Head :title="`${t('actions.edit')} ${t('navigation.[feature_plural]')}`" />
 
     <div v-if="canEdit" class="max-w-4xl mx-auto">
         <section class="space-y-6">
             <div class="flex justify-between items-center">
                 <div>
-                    <h1 class="text-2xl font-semibold text-slate-800">{{ t('[feature_plural].edit_[feature_name]') }}</h1>
+                    <h1 class="text-2xl font-semibold text-slate-800">{{ `${t('actions.edit')} ${t('navigation.[feature_plural]')}` }}</h1>
                     <p class="text-sm text-slate-500 mt-1">{{ t('[feature_plural].update_hint') }}</p>
                 </div>
 

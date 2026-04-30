@@ -329,6 +329,7 @@ class MakeCrudModule extends Command
         $this->generateCreatePage();
         $this->generateEditPage();
         $this->generateShowPage();
+        $this->syncLocaleFiles();
     }
 
     protected function generateTestFiles(): void
@@ -1603,5 +1604,99 @@ Route::middleware('auth')
     {
         // This will load from the stubs directory
         return '';
+    }
+
+    /**
+     * Ensure generated feature keys exist in frontend locale files.
+     */
+    protected function syncLocaleFiles(): void
+    {
+        $localeFiles = [
+            resource_path('js/Locales/en.ts'),
+            resource_path('js/Locales/bn.ts'),
+            resource_path('js/Locales/fr.ts'),
+            resource_path('js/Locales/ar.ts'),
+        ];
+
+        foreach ($localeFiles as $localeFile) {
+            if (!File::exists($localeFile)) {
+                $this->warn("⚠️  Locale file not found: {$localeFile}");
+                continue;
+            }
+
+            $content = File::get($localeFile);
+            $sectionName = strtolower(Str::plural($this->featureName));
+
+            if (str_contains($content, "{$sectionName}: {")) {
+                $this->info("ℹ️  Locale already contains '{$sectionName}' in: {$localeFile}");
+                continue;
+            }
+
+            $section = $this->buildLocaleSection($sectionName);
+            $updated = preg_replace('/\n\};\s*$/', ",\n\n{$section}\n};\n", $content);
+
+            if (!is_string($updated)) {
+                $this->warn("⚠️  Failed to update locale file: {$localeFile}");
+                continue;
+            }
+
+            File::put($localeFile, $updated);
+            $this->info("✅ Locale section inserted: {$localeFile}");
+        }
+    }
+
+    /**
+     * Build locale section for the generated feature.
+     */
+    protected function buildLocaleSection(string $sectionName): string
+    {
+        $featureSingular = strtolower($this->featureName);
+        $featureHeadline = Str::headline($this->featureName);
+
+        $lines = [
+            "    {$sectionName}: {",
+            "        title: '{$featureHeadline}',",
+            "        new_{$featureSingular}: 'Create {$featureHeadline}',",
+            "        edit_{$featureSingular}: 'Edit {$featureHeadline}',",
+            "        {$featureSingular}_details: '{$featureHeadline} Details',",
+            "        create_hint: 'Create a new {$featureSingular}',",
+            "        update_hint: 'Update {$featureSingular} information',",
+            "        manage_hint: 'Manage {$sectionName}',",
+            "        search_placeholder: 'Search {$sectionName}',",
+            "        loading: 'Loading {$sectionName}...',",
+            "        please_wait: 'Please wait',",
+            "        no_results: 'No {$sectionName} found',",
+            "        create_new: 'Create a new {$featureSingular} to get started',",
+            "        per_page: 'Per Page',",
+            "        page: 'Page',",
+            "        of: 'of',",
+            "        total: 'total',",
+            "        actions: 'Actions',",
+            "        view: 'View',",
+            "        edit: 'Edit',",
+            "        delete: 'Delete',",
+            "        created_at: 'Created At',",
+            "        updated_at: 'Updated At',",
+        ];
+
+        $fieldLines = collect($this->fields)
+            ->filter(fn($f) => !in_array($f['name'], ['id', 'created_at', 'updated_at', 'deleted_at', 'password']))
+            ->flatMap(function ($f) {
+                $name = $f['name'];
+                $label = Str::headline($name);
+
+                return [
+                    "        {$name}: '{$label}',",
+                    "        {$name}_placeholder: 'Enter {$label}',",
+                ];
+            })
+            ->values()
+            ->all();
+
+        $lines = array_merge($lines, $fieldLines, [
+            "    }",
+        ]);
+
+        return implode("\n", $lines);
     }
 }
